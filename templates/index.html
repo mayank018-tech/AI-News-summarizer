@@ -49,7 +49,7 @@
             width: 100%;
             height: 100%;
             z-index: -2;
-            background-image: url('bg3.jpg');
+            background-image: url("{{ url_for('static', filename='bg3.jpg') }}");
             background-size: cover;
             background-position: center 60%;
             background-repeat: no-repeat;
@@ -222,6 +222,15 @@
             text-align: center;
             padding: 2.5rem 1rem 1.5rem 1rem;
             animation: fadeIn 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            max-height: 1200px;
+            overflow: hidden;
+            transition: opacity 1s cubic-bezier(0.16, 1, 0.3, 1), 
+                        transform 1s cubic-bezier(0.16, 1, 0.3, 1), 
+                        max-height 1s cubic-bezier(0.16, 1, 0.3, 1),
+                        padding 1s cubic-bezier(0.16, 1, 0.3, 1),
+                        margin 1s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         .hero-title {
@@ -446,13 +455,20 @@
 
         /* Workspace & Split-Screen View */
         .workspace-section {
-            display: none;
+            display: flex;
             flex-direction: column;
             gap: 1.5rem;
             width: 90%;
             max-width: 960px;
-            margin: 1.5rem auto;
-            animation: fadeIn 1s cubic-bezier(0.16, 1, 0.3, 1);
+            margin: 0 auto;
+            opacity: 0;
+            max-height: 0;
+            overflow: hidden;
+            transform: translateY(30px) scale(0.98);
+            transition: opacity 1s cubic-bezier(0.16, 1, 0.3, 1), 
+                        transform 1s cubic-bezier(0.16, 1, 0.3, 1), 
+                        max-height 1s cubic-bezier(0.16, 1, 0.3, 1), 
+                        margin 1s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         .split-workspace {
@@ -576,11 +592,21 @@
 
         /* Body Mode Toggle */
         body.analysis-mode .hero-section {
-            display: none;
+            opacity: 0;
+            transform: translateY(-30px) scale(0.95);
+            max-height: 0;
+            padding-top: 0;
+            padding-bottom: 0;
+            margin-top: 0;
+            margin-bottom: 0;
+            pointer-events: none;
         }
         
         body.analysis-mode .workspace-section {
-            display: flex;
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            max-height: 1200px;
+            margin: 1.5rem auto;
         }
 
         /* Responsive Split View */
@@ -608,9 +634,9 @@
         </a>
 
         <div class="nav-links">
-            <a href="#" class="nav-link active">Analyze</a>
-            <a href="#" class="nav-link">History</a>
-            <a href="#" class="nav-link">Dashboard</a>
+            <a href="{{ url_for('index') }}" class="nav-link active">Analyze</a>
+            <a href="{{ url_for('history') }}" class="nav-link">History</a>
+            <a href="{{ url_for('dashboard') }}" class="nav-link">Dashboard</a>
         </div>
 
         <div class="nav-actions">
