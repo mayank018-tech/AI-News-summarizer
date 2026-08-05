@@ -27,10 +27,64 @@ from flask import Flask, render_template, request, jsonify, redirect, url_for, s
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 import datetime
+import urllib.request
+import re
+
+def fetch_article_text(url):
+    try:
+        req = urllib.request.Request(
+            url, 
+            headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
+        )
+        with urllib.request.urlopen(req, timeout=10) as response:
+            html = response.read().decode('utf-8', errors='ignore')
+        
+        # Strip script & style elements
+        text = re.sub(r'<script.*?>.*?</script>', '', html, flags=re.DOTALL | re.IGNORECASE)
+        text = re.sub(r'<style.*?>.*?</style>', '', text, flags=re.DOTALL | re.IGNORECASE)
+        text = re.sub(r'<.*?>', ' ', text)
+        
+        # Clean up whitespace and empty lines
+        lines = (line.strip() for line in text.splitlines())
+        chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
+        text = '\n'.join(chunk for chunk in chunks if chunk)
+        
+        # Filter down to the main content (ignore layout boilerplate header/footer if possible)
+        text_lines = text.split('\n')
+        # Keep only paragraphs/lines with actual sentence structure
+        content_lines = [line for line in text_lines if len(line) > 40 and not any(kw in line.lower() for kw in ['cookies', 'privacy policy', 'all rights reserved', 'sign up', 'subscribe'])]
+        
+        cleaned_text = '\n'.join(content_lines)
+        if len(cleaned_text) < 150:
+            cleaned_text = '\n'.join(text_lines) # Fallback to all text if filter was too aggressive
+            
+        return cleaned_text[:4000] # Cap text length to prevent huge context sizes
+    except Exception as e:
+        return f"Failed to retrieve article content: {str(e)}"
+
 from summarize import generate_summary
 from keywords import extract_keywords
 from ner import extract_entities
 from sentiment import analyze_sentiment
+from ml_model.predictor import predict_category
+
+import nltk
+from nltk.corpus import words
+def _ensure_words():
+    try:
+        nltk.data.find('corpora/words')
+    except LookupError:
+        nltk.download('words', quiet=True)
+
+_ensure_words()
+_english_vocab = set(w.lower() for w in words.words())
+
+def is_meaningful_text(text, threshold=0.3):
+    cleaned = re.sub(r'[^a-zA-Z\s]', '', text.lower()).split()
+    if not cleaned or len(cleaned) < 5:
+        return False
+    valid_count = sum(1 for w in cleaned if w in _english_vocab)
+    return (valid_count / len(cleaned)) >= threshold
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'default_secret_key_1234')
@@ -151,9 +205,84 @@ def logout():
     session.clear()
     return redirect(url_for('login'))
 
+@app.route('/edit-profile', methods=['GET', 'POST'])
+def edit_profile():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    
+    user = User.query.get(session['user_id'])
+    error = None
+    success = None
+    
+    if request.method == 'POST':
+        username = request.form.get('username', '').strip()
+        email = request.form.get('email', '').strip()
+        new_password = request.form.get('password', '').strip()
+        
+        if not username or not email:
+            error = "Username and email cannot be empty."
+        else:
+            # Check username uniqueness
+            existing_user = User.query.filter_by(username=username).first()
+            if existing_user and existing_user.id != user.id:
+                error = "Username already taken."
+            
+            # Check email uniqueness
+            existing_email = User.query.filter_by(email=email).first()
+            if existing_email and existing_email.id != user.id:
+                error = "Email already registered."
+                
+        if not error:
+            user.username = username
+            user.email = email
+            if new_password:
+                user.password_hash = generate_password_hash(new_password)
+            db.session.commit()
+            session['username'] = user.username
+            success = "Profile updated successfully!"
+            
+    return render_template('edit_profile.html', user=user, error=error, success=success)
+
 @app.route('/dashboard')
 def dashboard():
-    return render_template('dashboard.html')
+    user_id = session.get('user_id')
+    
+    # Query database stats for the current user
+    total_count = Summary.query.filter_by(user_id=user_id).count()
+    pos_count = Summary.query.filter_by(user_id=user_id, sentiment_label='Positive').count()
+    neu_count = Summary.query.filter_by(user_id=user_id, sentiment_label='Neutral').count()
+    neg_count = Summary.query.filter_by(user_id=user_id, sentiment_label='Negative').count()
+    
+    tech_count = Summary.query.filter_by(user_id=user_id, primary_category='AI Technology & Systems').count()
+    research_count = Summary.query.filter_by(user_id=user_id, primary_category='Research & Science').count()
+    policy_count = Summary.query.filter_by(user_id=user_id, primary_category='Policy, Law & Ethics').count()
+    
+    # Calculate average compound score
+    from sqlalchemy import func
+    avg_score_res = db.session.query(func.avg(Summary.sentiment_score)).filter_by(user_id=user_id).scalar()
+    avg_score = round(avg_score_res, 3) if avg_score_res is not None else 0.0
+    
+    # Top Category
+    cat_counts = {
+        'AI Technology & Systems': tech_count,
+        'Research & Science': research_count,
+        'Policy, Law & Ethics': policy_count
+    }
+    top_category = max(cat_counts, key=cat_counts.get) if total_count > 0 else "None"
+    
+    stats = {
+        'total': total_count,
+        'pos': pos_count,
+        'neu': neu_count,
+        'neg': neg_count,
+        'tech': tech_count,
+        'research': research_count,
+        'policy': policy_count,
+        'avg_score': avg_score,
+        'top_category': top_category
+    }
+    
+    return render_template('dashboard.html', stats=stats)
 
 @app.route('/analyze', methods=['POST'])
 def analyze():
@@ -171,6 +300,16 @@ def analyze():
         if not text:
             return jsonify({'error': 'Article text content cannot be empty.'}), 400
 
+        # Scraping Trigger: If the input text is a URL, fetch the webpage body first
+        if text.startswith('http://') or text.startswith('https://') or ('.' in text and ' ' not in text and len(text) < 120):
+            scraped_text = fetch_article_text(text)
+            if scraped_text.startswith("Failed to retrieve"):
+                return jsonify({'error': scraped_text}), 400
+            text = scraped_text
+
+        if not is_meaningful_text(text):
+            return jsonify({'error': 'The provided text contains too much unrecognizable or gibberish content. Please provide a valid news article.'}), 400
+
         # 1. Headline Extraction (First non-empty line or default title)
         lines = [line.strip() for line in text.split('\n') if line.strip()]
         headline = lines[0] if lines else "Analyzed News Article"
@@ -183,30 +322,8 @@ def analyze():
         entities = extract_entities(text)
         sentiment_data = analyze_sentiment(text)
 
-        # 3. Simple Rule-based Category Heuristics (Placeholder for future ML classification)
-        text_lower = text.lower()
-        tech_keywords = ['model', 'neural', 'architecture', 'edge', 'gpu', 'code', 'compute', 'hardware', 'deep learning']
-        policy_keywords = ['policy', 'ethics', 'law', 'regulation', 'government', 'bill', 'safety', 'copyright']
-        research_keywords = ['research', 'paper', 'publish', 'university', 'study', 'scientist', 'scientific']
-
-        tech_score = sum(1 for kw in tech_keywords if kw in text_lower)
-        policy_score = sum(1 for kw in policy_keywords if kw in text_lower)
-        research_score = sum(1 for kw in research_keywords if kw in text_lower)
-
-        total_score = tech_score + policy_score + research_score
-        if total_score == 0:
-            tech_score = 1
-            total_score = 1
-
-        categories = {
-            "primary": "AI Technology & Systems" if tech_score >= max(policy_score, research_score) else
-                       "Research & Science" if research_score >= policy_score else "Policy, Law & Ethics",
-            "scores": {
-                "tech": round((tech_score / total_score) * 100, 1),
-                "policy": round((policy_score / total_score) * 100, 1),
-                "research": round((research_score / total_score) * 100, 1)
-            }
-        }
+        # 3. ML-based category classification (TF-IDF + LinearSVC)
+        categories = predict_category(text)
 
         # Save to database if user is logged in (or as guest if user is None)
         user_id = session.get('user_id')

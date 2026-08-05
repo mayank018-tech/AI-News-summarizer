@@ -1,54 +1,103 @@
-from sklearn.feature_extraction.text import TfidfVectorizer
-from nltk.tokenize import sent_tokenize
-from preprocess import preprocess_text
+"""
+keywords.py — Fast, Efficient Keyword Extractor
+───────────────────────────────────────────────
+Uses an efficient RAKE (Rapid Automatic Keyword Extraction) style logic 
+combined with simple frequency scoring to extract multi-word and single-word 
+keyphrases instantly without downloading heavy machine learning models.
+"""
+import re
+import nltk
+from nltk.tokenize import word_tokenize
+from nltk.corpus import stopwords
 
-def extract_keywords(text, top_n=10):
-    """
-    Extracts the top N most relevant keywords from the text using scikit-learn's TF-IDF Vectorizer.
-    Treats individual sentences as the document corpus to evaluate term importance.
-    """
+def _ensure_nltk():
+    for resource, name in [
+        ("tokenizers/punkt", "punkt"),
+        ("tokenizers/punkt_tab", "punkt_tab"),
+        ("corpora/stopwords", "stopwords"),
+    ]:
+        try:
+            nltk.data.find(resource)
+        except LookupError:
+            nltk.download(name, quiet=True)
+
+_ensure_nltk()
+
+_STOP = set(stopwords.words("english"))
+_STOP.update({
+    "said", "say", "also", "would", "could", "may", "use", "used",
+    "one", "two", "three", "new", "like", "however", "according",
+    "across", "end", "expected", "early", "late", "within", "since",
+    "make", "made", "way", "year", "years", "time", "part",
+    "many", "much", "well", "still", "even", "just", "back", "last",
+    "first", "second", "third", "next", "number", "known", "go",
+})
+
+def _tokenize_words(text: str) -> list:
+    return [re.sub(r"[^a-z]", "", w.lower()) for w in word_tokenize(text)]
+
+def _candidate_phrases(text: str) -> list:
+    words = _tokenize_words(text)
+    phrases = []
+    current = []
+    for w in words:
+        if not w or len(w) < 2:
+            if current:
+                phrases.append(" ".join(current))
+                current = []
+            continue
+        if w in _STOP or w.isdigit():
+            if current:
+                phrases.append(" ".join(current))
+                current = []
+        else:
+            current.append(w)
+    if current:
+        phrases.append(" ".join(current))
+    return [p for p in phrases if len(p) > 1]
+
+def _word_scores(phrases: list) -> dict:
+    freq = {}
+    degree = {}
+    for phrase in phrases:
+        words = phrase.split()
+        d = len(words) - 1
+        for w in words:
+            freq[w] = freq.get(w, 0) + 1
+            degree[w] = degree.get(w, 0) + d
+    return {w: (degree[w] + freq[w]) / freq[w] for w in freq}
+
+def _phrase_score(phrase: str, word_scores: dict) -> float:
+    return sum(word_scores.get(w, 0) for w in phrase.split())
+
+def extract_keywords(text: str, top_n: int = 10) -> list:
     if not text or not isinstance(text, str):
         return []
 
-    sentences = sent_tokenize(text)
-    
-    # Fallback to simple term frequency if the article is too short for TF-IDF
-    if len(sentences) < 2:
-        cleaned_text = preprocess_text(text)
-        words = cleaned_text.split()
-        # Get unique words sorted by count
-        unique_words = sorted(list(set(words)), key=lambda w: words.count(w), reverse=True)
-        return [w for w in unique_words if len(w) > 2][:top_n]
-
-    # Clean and preprocess sentences
-    preprocessed_corpus = []
-    for sentence in sentences:
-        cleaned_sent = preprocess_text(sentence)
-        if cleaned_sent:
-            preprocessed_corpus.append(cleaned_sent)
-
-    if not preprocessed_corpus:
+    phrases = _candidate_phrases(text)
+    if not phrases:
         return []
 
-    # Calculate TF-IDF weights across sentences
-    try:
-        vectorizer = TfidfVectorizer(max_df=0.9, min_df=1)
-        tfidf_matrix = vectorizer.fit_transform(preprocessed_corpus)
-        
-        # Sum TF-IDF weights for each word across all sentences
-        feature_names = vectorizer.get_feature_names_out()
-        scores = tfidf_matrix.sum(axis=0).A1
-        
-        # Zip features and scores, sort in descending order
-        word_scores = list(zip(feature_names, scores))
-        sorted_word_scores = sorted(word_scores, key=lambda x: x[1], reverse=True)
-        
-        # Filter out very short words
-        keywords = [word for word, score in sorted_word_scores if len(word) > 2]
-        return keywords[:top_n]
-    except Exception:
-        # Fallback to word counts on failure
-        cleaned_text = preprocess_text(text)
-        words = cleaned_text.split()
-        unique_words = sorted(list(set(words)), key=lambda w: words.count(w), reverse=True)
-        return [w for w in unique_words if len(w) > 2][:top_n]
+    w_scores = _word_scores(phrases)
+    seen = set()
+    ranked = []
+    for phrase in phrases:
+        if phrase in seen:
+            continue
+        seen.add(phrase)
+        if len(phrase.split()) > 4:
+            continue
+        sc = _phrase_score(phrase, w_scores)
+        ranked.append((phrase, sc))
+
+    ranked.sort(key=lambda x: x[1], reverse=True)
+
+    final = []
+    for phrase, _ in ranked:
+        if any(phrase in selected and phrase != selected for selected in final):
+            continue
+        final.append(phrase.title())
+        if len(final) >= top_n:
+            break
+
+    return final

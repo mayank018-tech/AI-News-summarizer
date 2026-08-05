@@ -1,69 +1,68 @@
+"""
+summarize.py — Fast TF-IDF Extractive Summarization
+───────────────────────────────────────────────────
+Uses a lightweight TF-IDF and sentence position scoring approach 
+to extract the most important sentences instantly, avoiding heavy 
+transformer models.
+"""
+import math
 import nltk
-from nltk.tokenize import sent_tokenize
-from preprocess import preprocess_text
+from nltk.tokenize import sent_tokenize, word_tokenize
+from nltk.corpus import stopwords
+import string
 
-def _download_sent_tokenizer():
+def _ensure_nltk():
+    for resource, name in [
+        ("tokenizers/punkt", "punkt"),
+        ("tokenizers/punkt_tab", "punkt_tab"),
+        ("corpora/stopwords", "stopwords"),
+    ]:
+        try:
+            nltk.data.find(resource)
+        except LookupError:
+            nltk.download(name, quiet=True)
+
+_ensure_nltk()
+_STOP = set(stopwords.words('english'))
+
+def _compute_tf(text: str) -> dict:
+    words = [w.lower() for w in word_tokenize(text) if w.lower() not in _STOP and w.isalnum()]
+    tf = {}
+    for w in words:
+        tf[w] = tf.get(w, 0) + 1
+    total = len(words)
+    if total > 0:
+        for w in tf:
+            tf[w] = tf[w] / total
+    return tf
+
+def generate_summary(text: str, max_sentences: int = 3) -> str:
+    if not text or len(text.strip()) < 50:
+        return text.strip()
+    
     try:
-        nltk.data.find('tokenizers/punkt')
-    except LookupError:
-        nltk.download('punkt', quiet=True)
+        sentences = sent_tokenize(text)
+        if len(sentences) <= max_sentences:
+            return text
 
-_download_sent_tokenizer()
-
-def generate_summary(text, min_sentences=3, max_sentences=5):
-    """
-    Generates a concise 3-5 sentence summary of the text using frequency-based sentence scoring.
-    """
-    if not text or not isinstance(text, str):
-        return "No text provided for summarization."
-
-    sentences = sent_tokenize(text)
-    # If the text is short, return it as-is
-    if len(sentences) <= min_sentences:
-        return text
-
-    # Preprocess the entire text to determine word weights
-    cleaned_text = preprocess_text(text)
-    words = cleaned_text.split()
-
-    if not words:
-        return text[:300] + "..."
-
-    # Calculate word frequency counts
-    word_frequencies = {}
-    for word in words:
-        word_frequencies[word] = word_frequencies.get(word, 0) + 1
-
-    # Normalize frequencies by scaling against the most frequent word
-    max_freq = max(word_frequencies.values())
-    for word in word_frequencies:
-        word_frequencies[word] = word_frequencies[word] / max_freq
-
-    # Score each sentence by summing the normalized frequency of its words
-    sentence_scores = {}
-    for index, sentence in enumerate(sentences):
-        cleaned_sentence = preprocess_text(sentence)
-        sentence_words = cleaned_sentence.split()
-
-        score = 0
-        for word in sentence_words:
-            if word in word_frequencies:
-                score += word_frequencies[word]
+        tf = _compute_tf(text)
         
-        # Adjust score slightly based on sentence length to avoid bias towards extremely long sentences
-        if len(sentence_words) > 0:
-            sentence_scores[index] = score / len(sentence_words)
-        else:
-            sentence_scores[index] = 0
-
-    # Pick the top N sentences
-    target_count = min(max_sentences, max(min_sentences, len(sentences) // 4))
-    
-    # Get indices of top sentences
-    top_indices = sorted(sentence_scores, key=sentence_scores.get, reverse=True)[:target_count]
-    
-    # Sort indices so the summary sentences appear in chronological order
-    top_indices.sort()
-
-    summary = " ".join([sentences[idx].strip() for idx in top_indices])
-    return summary
+        scores = []
+        for i, sent in enumerate(sentences):
+            words = [w.lower() for w in word_tokenize(sent) if w.lower() not in _STOP and w.isalnum()]
+            score = sum(tf.get(w, 0) for w in words)
+            
+            # Boost first few sentences (Inverted pyramid for news)
+            if i < 2:
+                score *= 1.5
+                
+            scores.append((i, score, sent))
+            
+        scores.sort(key=lambda x: x[1], reverse=True)
+        top_sentences = scores[:max_sentences]
+        top_sentences.sort(key=lambda x: x[0])
+        
+        return "\n".join([f"• {sent.strip()}" for i, score, sent in top_sentences])
+    except Exception as e:
+        print(f"[Summarization Error] {e}")
+        return text[:500] + "..."

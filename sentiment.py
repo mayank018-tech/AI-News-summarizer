@@ -1,71 +1,101 @@
+"""
+sentiment.py — Fast VADER Sentiment Analyzer
+──────────────────────────────────────────
+Uses NLTK's VADER (Valence Aware Dictionary and sEntiment Reasoner) 
+to classify text into Positive/Negative/Neutral sentiment instantly.
+"""
+
 import nltk
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
+from nltk.tokenize import sent_tokenize
 
-def _download_vader_lexicon():
-    import os
-    import shutil
-    try:
-        nltk.data.find('sentiment/vader_lexicon')
-    except Exception:
-        # Clean up corrupted files if present
-        for path in nltk.data.path:
-            try:
-                target_dir = os.path.join(path, 'sentiment')
-                zip_file = os.path.join(target_dir, "vader_lexicon.zip")
-                extracted_folder = os.path.join(target_dir, "vader_lexicon")
-                if os.path.exists(zip_file):
-                    os.remove(zip_file)
-                if os.path.exists(extracted_folder):
-                    shutil.rmtree(extracted_folder)
-            except Exception:
-                pass
+def _ensure_nltk():
+    for resource, name in [
+        ("sentiment/vader_lexicon.zip", "vader_lexicon"),
+        ("tokenizers/punkt", "punkt"),
+        ("tokenizers/punkt_tab", "punkt_tab")
+    ]:
         try:
-            nltk.download('vader_lexicon', quiet=True)
-        except Exception:
-            pass
+            nltk.data.find(resource)
+        except LookupError:
+            nltk.download(name, quiet=True)
 
-_download_vader_lexicon()
+_ensure_nltk()
+_sia = None
 
-def analyze_sentiment(text):
-    """
-    Analyzes the sentiment of the text using NLTK's VADER SentimentIntensityAnalyzer.
-    Classifies the text as Positive, Neutral, or Negative and returns compound confidence scores.
-    """
-    default_result = {
+def _get_sia():
+    global _sia
+    if _sia is None:
+        _sia = SentimentIntensityAnalyzer()
+    return _sia
+
+def analyze_sentiment(text: str) -> dict:
+    default = {
         "label": "Neutral",
-        "scores": {
-            "pos": 0.0,
-            "neu": 1.0,
-            "neg": 0.0,
-            "compound": 0.0
-        }
+        "scores": {"pos": 0.0, "neu": 1.0, "neg": 0.0, "compound": 0.0},
+        "avg_compound": 0.0,
+        "dominant_tone": "Insufficient text for analysis"
     }
 
-    if not text or not isinstance(text, str):
-        return default_result
+    if not text or len(text.strip()) < 10:
+        return default
 
     try:
-        sia = SentimentIntensityAnalyzer()
-        scores = sia.polarity_scores(text)
+        sia = _get_sia()
+        sentences = sent_tokenize(text)
         
-        compound = scores.get('compound', 0.0)
+        compound_sum = 0.0
+        pos_sum = 0.0
+        neg_sum = 0.0
+        neu_sum = 0.0
+        count = 0
         
-        # Standard VADER compound score boundaries
-        if compound >= 0.05:
-            label = "Positive"
-        elif compound <= -0.05:
-            label = "Negative"
+        for sent in sentences:
+            if len(sent.split()) < 3:
+                continue
+            scores = sia.polarity_scores(sent)
+            compound_sum += scores['compound']
+            pos_sum += scores['pos']
+            neg_sum += scores['neg']
+            neu_sum += scores['neu']
+            count += 1
+            
+        if count == 0:
+            return default
+            
+        avg_compound = compound_sum / count
+        avg_pos = pos_sum / count
+        if avg_compound >= 0.05:
+            final_label = "Positive"
+            tone = "Generally positive language"
+            pos_pct = 50.0 + (avg_compound * 40.0)
+            neg_pct = (1.0 - avg_compound) * 5.0
+            neu_pct = 100.0 - pos_pct - neg_pct
+        elif avg_compound <= -0.05:
+            final_label = "Negative"
+            tone = "Generally negative language"
+            neg_pct = 50.0 + (abs(avg_compound) * 40.0)
+            pos_pct = (1.0 - abs(avg_compound)) * 5.0
+            neu_pct = 100.0 - neg_pct - pos_pct
         else:
-            label = "Neutral"
+            final_label = "Neutral"
+            tone = "Balanced tone or mostly objective reporting"
+            neu_pct = 70.0 + (30.0 * (1.0 - abs(avg_compound)))
+            pos_pct = (100.0 - neu_pct) / 2.0
+            neg_pct = (100.0 - neu_pct) / 2.0
 
         return {
-            "label": label,
+            "label": final_label,
             "scores": {
-                "pos": round(scores.get('pos', 0.0), 3),
-                "neu": round(scores.get('neu', 1.0), 3),
-                "neg": round(scores.get('neg', 0.0), 3),
-                "compound": round(compound, 3)
-            }
+                "pos": round(pos_pct, 1),
+                "neu": round(neu_pct, 1),
+                "neg": round(neg_pct, 1),
+                "compound": round(avg_compound, 3),
+            },
+            "avg_compound": round(avg_compound, 3),
+            "dominant_tone": tone
         }
-    except Exception:
-        return default_result
+
+    except Exception as e:
+        print(f"[Sentiment Error] {e}")
+        return default
