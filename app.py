@@ -145,6 +145,12 @@ def history():
     summaries = Summary.query.filter_by(user_id=user_id).order_by(Summary.created_at.desc()).all()
     return render_template('history.html', summaries=summaries)
 
+@app.route('/reanalyze/<int:summary_id>')
+def reanalyze(summary_id):
+    user_id = session.get('user_id')
+    summary = Summary.query.filter_by(id=summary_id, user_id=user_id).first_or_404()
+    return render_template('index.html', prefill_text=summary.original_text)
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':

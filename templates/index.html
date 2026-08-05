@@ -1267,6 +1267,14 @@
                 workspaceOutput.textContent = 'Analysis results will appear here...';
                 cachedNlpResult = null;
             });
+        // Prefill from history if redirected
+        const prefillRaw = {{ prefill_text|default('null')|tojson|safe }};
+        if (prefillRaw && prefillRaw !== 'null' && prefillRaw.trim() !== '') {
+            workspaceTextarea.value = prefillRaw;
+            // Slightly delay the click to ensure DOM is ready and debounce isn't missed
+            setTimeout(() => {
+                triggerDebouncedAnalysis();
+            }, 500);
         }
     </script>
 </body>

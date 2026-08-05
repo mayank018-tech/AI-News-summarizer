@@ -635,6 +635,9 @@
                                     <span class="badge-meta badge-sentiment-neu">Neutral</span>
                                 {% endif %}
                             {% endif %}
+                            <a href="{{ url_for('reanalyze', summary_id=summary.id) }}" class="btn-analyze" style="margin-left: auto; padding: 0.3rem 0.8rem; font-size: 0.8rem; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; background: linear-gradient(135deg, rgba(62,185,255,0.1), rgba(121,98,255,0.1)); border: 1px solid rgba(62,185,255,0.3); border-radius: 6px; color: var(--primary); transition: all 0.2s;">
+                                View Full Analysis →
+                            </a>
                         </div>
                     </div>
                 {% endfor %}
