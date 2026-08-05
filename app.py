@@ -67,6 +67,11 @@ from keywords import extract_keywords
 from ner import extract_entities
 from sentiment import analyze_sentiment
 from ml_model.predictor import predict_category
+from credibility import analyze_credibility
+from bias import detect_bias
+from company_insights import extract_company_insights
+from brief import generate_brief
+from terminology import explain_terminology
 
 import nltk
 from nltk.corpus import words
@@ -321,9 +326,16 @@ def analyze():
         keywords = extract_keywords(text)
         entities = extract_entities(text)
         sentiment_data = analyze_sentiment(text)
-
+        
         # 3. ML-based category classification (TF-IDF + LinearSVC)
         categories = predict_category(text)
+
+        # 4. Advanced NLP Features
+        credibility = analyze_credibility(text)
+        bias_data = detect_bias(text)
+        company_insights = extract_company_insights(text)
+        brief = generate_brief(text)
+        terminology = explain_terminology(text)
 
         # Save to database if user is logged in (or as guest if user is None)
         user_id = session.get('user_id')
@@ -345,7 +357,12 @@ def analyze():
             'keywords': keywords,
             'entities': entities,
             'sentiment': sentiment_data,
-            'categories': categories
+            'categories': categories,
+            'credibility': credibility,
+            'bias': bias_data,
+            'company_insights': company_insights,
+            'brief': brief,
+            'terminology': terminology
         })
 
     except Exception as e:
