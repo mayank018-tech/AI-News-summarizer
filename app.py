@@ -78,6 +78,8 @@ import nltk
 from nltk.corpus import words
 def _ensure_words():
     nltk_data_dir = '/tmp/nltk_data'
+    import os
+    os.makedirs(nltk_data_dir, exist_ok=True)
     if nltk_data_dir not in nltk.data.path:
         nltk.data.path.append(nltk_data_dir)
     try:
