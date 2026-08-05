@@ -53,6 +53,7 @@
             opacity: 0.07;
             filter: blur(12px);
             transition: transform 0.1s ease-out;
+            will-change: transform;
         }
 
         /* Overlay to blend background with UI */
@@ -541,6 +542,50 @@
             transform: translateX(-2px);
             border-color: rgba(255, 255, 255, 0.15);
         }
+        .detailed-view {
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .history-card.expanded .detailed-view {
+            display: block;
+            opacity: 1;
+            animation: fadeIn 0.4s ease forwards;
+        }
+
+        .history-card {
+            cursor: pointer;
+        }
+
+        .original-text-box {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 1rem;
+            font-size: 0.85rem;
+            color: #d1d1d6;
+            line-height: 1.6;
+            max-height: 200px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+
+        /* Custom Scrollbar for Text Box */
+        .original-text-box::-webkit-scrollbar {
+            width: 6px;
+        }
+        .original-text-box::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.1);
+            border-radius: 4px;
+        }
+        .original-text-box::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.1);
+            border-radius: 4px;
+        }
+        .original-text-box::-webkit-scrollbar-thumb:hover {
+            background: rgba(255,255,255,0.2);
+        }
     </style>
 </head>
 <body>
@@ -616,33 +661,41 @@
         {% if summaries %}
             <div class="history-grid">
                 {% for summary in summaries %}
-                    <div class="history-card">
-                        <div class="history-card-header">
-                            <h3 class="history-card-title">{{ summary.headline }}</h3>
-                            <span class="history-card-date">{{ summary.created_at.strftime('%b %d, %Y %H:%M') }}</span>
-                        </div>
-                        <div class="history-card-body">
-                            {{ summary.summary_text }}
-                        </div>
-                        <div class="history-card-meta">
-                            {% if summary.primary_category %}
-                                <span class="badge-meta badge-category">{{ summary.primary_category }}</span>
-                            {% endif %}
-                            {% if summary.sentiment_label %}
-                                {% if summary.sentiment_label == 'Positive' %}
-                                    <span class="badge-meta badge-sentiment-pos">Positive</span>
-                                {% elif summary.sentiment_label == 'Negative' %}
-                                    <span class="badge-meta badge-sentiment-neg">Negative</span>
-                                {% else %}
-                                    <span class="badge-meta badge-sentiment-neu">Neutral</span>
-                                {% endif %}
-                            {% endif %}
-                            <a href="{{ url_for('reanalyze', summary_id=summary.id) }}" class="btn-analyze" style="margin-left: auto; padding: 0.3rem 0.8rem; font-size: 0.8rem; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; background: linear-gradient(135deg, rgba(62,185,255,0.1), rgba(121,98,255,0.1)); border: 1px solid rgba(62,185,255,0.3); border-radius: 6px; color: var(--primary); transition: all 0.2s;">
-                                View Full Analysis →
-                            </a>
+            <div class="history-card" onclick="this.classList.toggle('expanded')">
+                <div class="history-card-header">
+                    <h3 class="history-card-title">{{ summary.headline }}</h3>
+                    <span class="history-card-date">{{ summary.created_at.strftime('%b %d, %Y - %H:%M') }}</span>
+                </div>
+                
+                <p class="history-card-body">
+                    {{ summary.summary_text }}
+                </p>
+
+                <div class="history-card-meta">
+                    <span class="badge-meta badge-category">{{ summary.primary_category }}</span>
+                    {% if summary.sentiment_label == 'Positive' %}
+                        <span class="badge-meta badge-sentiment-pos">Positive ({{ summary.sentiment_score }})</span>
+                    {% elif summary.sentiment_label == 'Negative' %}
+                        <span class="badge-meta badge-sentiment-neg">Negative ({{ summary.sentiment_score }})</span>
+                    {% else %}
+                        <span class="badge-meta badge-sentiment-neu">Neutral ({{ summary.sentiment_score }})</span>
+                    {% endif %}
+                </div>
+                
+                <!-- Detailed View (Hidden by default, shown on click via CSS/JS) -->
+                <div class="detailed-view">
+                    <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid rgba(255, 255, 255, 0.1);">
+                        <h4 style="font-family: 'Outfit', sans-serif; margin-bottom: 0.75rem; font-size: 1rem; color: var(--primary);">Original Input Text</h4>
+                        <div class="original-text-box">
+                            {{ summary.original_text }}
                         </div>
                     </div>
-                {% endfor %}
+                    <a href="{{ url_for('reanalyze', summary_id=summary.id) }}" class="back-btn" style="margin-top: 1rem; width: 100%; justify-content: center;" onclick="event.stopPropagation();">
+                        Run Full Deep Analysis Again
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
             </div>
         {% else %}
             <div class="placeholder-card">

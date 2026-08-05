@@ -142,6 +142,14 @@ class Summary(db.Model):
 with app.app_context():
     db.create_all()
 
+@app.before_request
+def check_valid_session():
+    # If a user is logged in, ensure their account still exists in the DB (handles Render ephemeral disk wipes)
+    if 'user_id' in session:
+        user = User.query.get(session['user_id'])
+        if not user:
+            session.clear()
+
 @app.route('/')
 def index():
     return render_template('index.html')
