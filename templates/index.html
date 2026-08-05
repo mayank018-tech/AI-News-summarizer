@@ -1121,7 +1121,11 @@
                 case 'credibility':
                     outputLabel.textContent = "Credibility Score";
                     const cred = cachedNlpResult.credibility || {};
-                    resultText = cred.error ? `Error: ${cred.error}` : `Score: ${cred.score}/100\n\nExplanation:\n${cred.explanation || 'No explanation.'}`;
+                    let credExplain = 'No explanation.';
+                    if (Array.isArray(cred.reasons) && cred.reasons.length > 0) {
+                        credExplain = cred.reasons.join('\n');
+                    }
+                    resultText = cred.error ? `Error: ${cred.error}` : `Score: ${cred.score}/100\nConfidence: ${cred.confidence || 'N/A'}\n\nExplanation:\n${credExplain}`;
                     break;
                 case 'bias':
                     outputLabel.textContent = "Bias Detection";
