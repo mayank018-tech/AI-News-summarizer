@@ -72,6 +72,48 @@ AI_DICTIONARY = {
         "definition": "A hypothetical AI system that can understand, learn, and apply knowledge across a wide range of tasks at a human or superhuman level.",
         "example": "An AI that can invent new physics theories, write a bestselling novel, and run a company.",
         "importance": "It is considered the ultimate goal of AI research and would fundamentally change human society."
+    },
+    "ai": {
+        "term": "AI (Artificial Intelligence)",
+        "definition": "The simulation of human intelligence processes by machines, especially computer systems.",
+        "example": "Virtual assistants like Siri and Alexa are examples of AI.",
+        "importance": "It is the overarching field that encompasses all smart machine technologies."
+    },
+    "machine learning": {
+        "term": "Machine Learning (ML)",
+        "definition": "A subset of AI that allows systems to automatically learn and improve from experience without being explicitly programmed.",
+        "example": "Netflix recommending a movie based on your watch history uses machine learning.",
+        "importance": "It shifted AI from rules-based programming to data-driven learning."
+    },
+    "deep learning": {
+        "term": "Deep Learning",
+        "definition": "A type of machine learning based on artificial neural networks with multiple layers of processing.",
+        "example": "Facial recognition systems on modern smartphones rely on deep learning.",
+        "importance": "It is responsible for the massive leaps in computer vision and natural language processing in recent years."
+    },
+    "nlp": {
+        "term": "NLP (Natural Language Processing)",
+        "definition": "A branch of AI that gives computers the ability to understand text and spoken words in much the same way human beings can.",
+        "example": "This very application summarizing a news article is an example of NLP.",
+        "importance": "It bridges the communication gap between humans and computers."
+    },
+    "algorithm": {
+        "term": "Algorithm",
+        "definition": "A set of mathematical instructions or rules given to an AI to help it learn from data and make decisions.",
+        "example": "YouTube's recommendation algorithm decides which video to show you next.",
+        "importance": "Algorithms are the core logic engines driving all software and AI systems."
+    },
+    "neural network": {
+        "term": "Neural Network",
+        "definition": "A computing system inspired by the biological neural networks that constitute animal brains.",
+        "example": "An image classification system identifying cats vs dogs uses a neural network.",
+        "importance": "It forms the foundation of deep learning and complex pattern recognition."
+    },
+    "dataset": {
+        "term": "Dataset",
+        "definition": "A large collection of data used to train, test, or evaluate an AI model.",
+        "example": "Wikipedia and Reddit were used as datasets to train Large Language Models.",
+        "importance": "High-quality datasets are often more critical to an AI's success than the algorithm itself."
     }
 }
 
