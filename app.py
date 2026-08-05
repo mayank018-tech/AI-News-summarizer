@@ -92,6 +92,14 @@ def is_meaningful_text(text, threshold=0.3):
     return (valid_count / len(cleaned)) >= threshold
 
 app = Flask(__name__)
+
+@app.after_request
+def add_header(response):
+    response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    response.headers['Pragma'] = 'no-cache'
+    response.headers['Expires'] = '0'
+    return response
+
 app.secret_key = os.environ.get('SECRET_KEY', 'default_secret_key_1234')
 
 # Use Supabase Database URL or a local SQLite backup
