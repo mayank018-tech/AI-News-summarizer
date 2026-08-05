@@ -23,7 +23,8 @@ try:
 except Exception as e:
     pass
 
-from flask import Flask, render_template, request, jsonify, redirect, url_for, session
+from flask import Flask, render_template, request, jsonify, redirect, url_for, session, make_response
+from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 import datetime
@@ -76,10 +77,13 @@ from terminology import explain_terminology
 import nltk
 from nltk.corpus import words
 def _ensure_words():
+    nltk_data_dir = '/tmp/nltk_data'
+    if nltk_data_dir not in nltk.data.path:
+        nltk.data.path.append(nltk_data_dir)
     try:
         nltk.data.find('corpora/words')
     except LookupError:
-        nltk.download('words', quiet=True)
+        nltk.download('words', download_dir=nltk_data_dir, quiet=True)
 
 _ensure_words()
 _english_vocab = set(w.lower() for w in words.words())
@@ -92,6 +96,12 @@ def is_meaningful_text(text, threshold=0.3):
     return (valid_count / len(cleaned)) >= threshold
 
 app = Flask(__name__)
+# Enable CORS for cross-origin requests from GitHub Pages
+CORS(app, supports_credentials=True)
+
+# Required for cross-origin cookies (sessions)
+app.config['SESSION_COOKIE_SAMESITE'] = 'None'
+app.config['SESSION_COOKIE_SECURE'] = True
 
 @app.after_request
 def add_header(response):
@@ -161,6 +171,26 @@ def history():
     summaries = Summary.query.filter_by(user_id=user_id).order_by(Summary.created_at.desc()).all()
     return render_template('history.html', summaries=summaries)
 
+@app.route('/api/history', methods=['GET', 'POST'])
+def api_history():
+    user_id = session.get('user_id')
+    if request.is_json and request.get_json():
+        user_id = request.get_json().get('user_id', user_id)
+        
+    summaries = Summary.query.filter_by(user_id=user_id).order_by(Summary.created_at.desc()).all()
+    history_data = []
+    for s in summaries:
+        history_data.append({
+            'id': s.id,
+            'headline': s.headline,
+            'summary_text': s.summary_text,
+            'sentiment_label': s.sentiment_label,
+            'sentiment_score': s.sentiment_score,
+            'primary_category': s.primary_category,
+            'created_at': s.created_at.strftime("%Y-%m-%d %H:%M")
+        })
+    return jsonify({"history": history_data})
+
 @app.route('/reanalyze/<int:summary_id>')
 def reanalyze(summary_id):
     user_id = session.get('user_id')
@@ -183,7 +213,7 @@ def login():
             session['user_id'] = user.id
             session['username'] = user.username
             if request.is_json:
-                return jsonify({"status": "success", "message": "Logged in successfully", "redirect": url_for('index')})
+                return jsonify({"status": "success", "message": "Logged in successfully", "redirect": "index.html", "user_id": user.id, "username": user.username})
             return redirect(url_for('index'))
             
         if request.is_json:
@@ -223,7 +253,7 @@ def signup():
         session['username'] = new_user.username
         
         if request.is_json:
-            return jsonify({"status": "success", "message": "Registered successfully", "redirect": url_for('index')})
+            return jsonify({"status": "success", "message": "Registered successfully", "redirect": "index.html", "user_id": new_user.id, "username": new_user.username})
         return redirect(url_for('index'))
     return render_template('signup.html')
 
@@ -311,6 +341,46 @@ def dashboard():
     
     return render_template('dashboard.html', stats=stats)
 
+@app.route('/api/dashboard', methods=['GET', 'POST'])
+def api_dashboard():
+    user_id = session.get('user_id')
+    if request.is_json and request.get_json():
+        user_id = request.get_json().get('user_id', user_id)
+        
+    # Query database stats for the current user
+    total_count = Summary.query.filter_by(user_id=user_id).count()
+    pos_count = Summary.query.filter_by(user_id=user_id, sentiment_label='Positive').count()
+    neu_count = Summary.query.filter_by(user_id=user_id, sentiment_label='Neutral').count()
+    neg_count = Summary.query.filter_by(user_id=user_id, sentiment_label='Negative').count()
+    
+    tech_count = Summary.query.filter_by(user_id=user_id, primary_category='AI Technology & Systems').count()
+    research_count = Summary.query.filter_by(user_id=user_id, primary_category='Research & Science').count()
+    policy_count = Summary.query.filter_by(user_id=user_id, primary_category='Policy, Law & Ethics').count()
+    
+    from sqlalchemy import func
+    avg_score_res = db.session.query(func.avg(Summary.sentiment_score)).filter_by(user_id=user_id).scalar()
+    avg_score = round(avg_score_res, 3) if avg_score_res is not None else 0.0
+    
+    cat_counts = {
+        'AI Technology & Systems': tech_count,
+        'Research & Science': research_count,
+        'Policy, Law & Ethics': policy_count
+    }
+    top_category = max(cat_counts, key=cat_counts.get) if total_count > 0 else "None"
+    
+    return jsonify({
+        'total': total_count,
+        'pos': pos_count,
+        'neu': neu_count,
+        'neg': neg_count,
+        'tech': tech_count,
+        'research': research_count,
+        'policy': policy_count,
+        'avg_score': avg_score,
+        'top_category': top_category,
+        'username': session.get('username')
+    })
+
 @app.route('/analyze', methods=['POST'])
 def analyze():
     """
@@ -361,6 +431,9 @@ def analyze():
 
         # Save to database if user is logged in (or as guest if user is None)
         user_id = session.get('user_id')
+        if request.is_json and request.get_json():
+            user_id = request.get_json().get('user_id', user_id)
+            
         new_summary = Summary(
             user_id=user_id,
             headline=headline,

@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI News Summarizer - Edit Profile</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;400;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #050505;
+            --primary: #ffffff;
+            --card-bg: rgba(255, 255, 255, 0.03);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --text-main: #f3f4f6;
+            --text-muted: #8e8e93;
+            --input-bg: rgba(255, 255, 255, 0.02);
+            --input-border: rgba(255, 255, 255, 0.08);
+            --transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: hidden;
+            position: relative;
+            padding-bottom: 4rem;
+        }
+
+        /* Fullscreen Background Setup */
+        .background-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            background-image: url("static/bg3.jpg");
+            background-size: cover;
+            background-position: center 60%;
+            background-repeat: no-repeat;
+            opacity: 0.25;
+            transition: transform 0.1s ease-out;
+        }
+
+        /* Overlay to blend background with UI */
+        .background-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: radial-gradient(circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(5, 5, 5, 0.2) 0%, rgba(5, 5, 5, 0.92) 80%);
+            pointer-events: none;
+            transition: background 0.1s ease-out;
+        }
+
+        /* Pill-shaped Classic Navbar - White One-Line */
+        .navbar-capsule {
+            width: 90%;
+            max-width: 760px;
+            background: linear-gradient(to bottom, #ffffff 0%, #f6f6f9 100%);
+            border-top: 1px solid #ffffff;
+            border-left: 1px solid #ffffff;
+            border-right: 1px solid #e1e1e6;
+            border-bottom: 1px solid #d1d1d6;
+            border-radius: 14px;
+            padding: 0.65rem 1.5rem;
+            margin: 1.5rem auto;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2), 
+                        inset 0 1px 0 rgba(255, 255, 255, 0.9),
+                        inset 0 -1px 2px rgba(0, 0, 0, 0.05);
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+            position: relative;
+        }
+
+        .nav-logo-group {
+            display: flex;
+            align-items: center;
+            gap: 0.65rem;
+            text-decoration: none;
+            color: #1d1d1f;
+        }
+
+        .nav-logo-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            object-fit: cover;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .nav-logo-text {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.05rem;
+            font-weight: 700;
+            letter-spacing: -0.3px;
+            text-shadow: 0 1px 0 #ffffff;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .nav-link {
+            color: #6e6e73;
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 600;
+            letter-spacing: 0.2px;
+            transition: var(--transition);
+            position: relative;
+            padding: 0.15rem 0;
+            text-shadow: 0 1px 0 #ffffff;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            color: #000000;
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background-color: #000000;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+            transition: var(--transition);
+        }
+
+        .nav-link.active::after, .nav-link:hover::after {
+            width: 100%;
+        }
+
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 1.25rem;
+        }
+
+        .github-pill-btn {
+            background: linear-gradient(to bottom, #3a3a3c 0%, #1c1c1e 100%);
+            border-top: 1px solid rgba(255, 255, 255, 0.15);
+            border-bottom: 1px solid #000000;
+            color: #ffffff;
+            text-decoration: none;
+            padding: 0.45rem 1.15rem;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            transition: var(--transition);
+        }
+
+        .github-pill-btn:hover {
+            background: linear-gradient(to bottom, #48484a 0%, #2c2c2e 100%);
+            transform: translateY(1px);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Profile Dropdown Menu Styling */
+        .profile-container {
+            position: relative;
+            display: inline-block;
+        }
+
+        .profile-btn {
+            background: linear-gradient(to bottom, #3a3a3c 0%, #1c1c1e 100%);
+            border-top: 1px solid rgba(255, 255, 255, 0.15);
+            border-bottom: 1px solid #000000;
+            color: #ffffff;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            transition: var(--transition);
+        }
+
+        .profile-btn:hover {
+            background: linear-gradient(to bottom, #48484a 0%, #2c2c2e 100%);
+            transform: translateY(1px);
+        }
+
+        .profile-dropdown {
+            position: absolute;
+            top: calc(100% + 12px);
+            right: 0;
+            width: 200px;
+            background: rgba(18, 18, 18, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            opacity: 0;
+            transform: translateY(-10px) scale(0.95);
+            pointer-events: none;
+            transition: var(--transition);
+            z-index: 1000;
+            padding: 0.5rem 0;
+        }
+
+        .profile-dropdown.show {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            pointer-events: auto;
+        }
+
+        .dropdown-header {
+            padding: 0.5rem 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.15rem;
+            text-align: left;
+        }
+
+        .user-name {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            font-size: 0.88rem;
+            color: #ffffff;
+        }
+
+        .user-role {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .dropdown-divider {
+            height: 1px;
+            background: rgba(255, 255, 255, 0.08);
+            margin: 0.4rem 0;
+        }
+
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 0.65rem;
+            padding: 0.55rem 1rem;
+            color: #d1d1d6;
+            text-decoration: none;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            font-size: 0.85rem;
+            transition: var(--transition);
+            cursor: pointer;
+        }
+
+        .dropdown-item svg {
+            color: var(--text-muted);
+        }
+
+        .dropdown-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: #ffffff;
+        }
+
+        .dropdown-item:hover svg {
+            color: #ffffff;
+        }
+
+        .dropdown-item.logout-item:hover {
+            background: rgba(255, 69, 58, 0.1);
+            color: #ff453a;
+        }
+
+        .dropdown-item.logout-item:hover svg {
+            color: #ff453a;
+        }
+
+        /* Container & Card Styling */
+        .edit-profile-container {
+            width: 90%;
+            max-width: 440px;
+            background: rgba(20, 20, 22, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 24px;
+            backdrop-filter: blur(40px);
+            -webkit-backdrop-filter: blur(40px);
+            padding: 2.5rem;
+            margin: 7rem auto 2rem auto;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            position: relative;
+            z-index: 10;
+        }
+
+        .auth-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .auth-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.75rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            color: var(--primary);
+            margin-bottom: 0.35rem;
+        }
+
+        .auth-subtitle {
+            font-size: 0.88rem;
+            color: var(--text-muted);
+        }
+
+        /* Forms inputs styling */
+        .form-group {
+            margin-bottom: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .form-label {
+            font-size: 0.78rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+        }
+
+        .form-control {
+            background: var(--input-bg);
+            border: 1px solid var(--input-border);
+            border-radius: 12px;
+            padding: 0.85rem 1rem;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 0.9rem;
+            color: var(--text-main);
+            transition: var(--transition);
+            outline: none;
+            width: 100%;
+        }
+
+        .form-control:focus {
+            border-color: rgba(255, 255, 255, 0.25);
+            background: rgba(255, 255, 255, 0.04);
+            box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.02);
+        }
+
+        /* Buttons styling */
+        .btn-primary {
+            background: linear-gradient(to bottom, #ffffff 0%, #e1e1e6 100%);
+            border: none;
+            color: #000000;
+            padding: 0.95rem;
+            border-radius: 12px;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            margin-top: 1rem;
+            width: 100%;
+            text-align: center;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(255, 255, 255, 0.1);
+        }
+
+        /* Alerts styling */
+        .alert-error {
+            background: rgba(255, 69, 58, 0.1);
+            border: 1px solid rgba(255, 69, 58, 0.15);
+            color: #ff453a;
+            border-radius: 12px;
+            padding: 0.8rem 1rem;
+            font-size: 0.82rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .alert-success {
+            background: rgba(48, 209, 88, 0.1);
+            border: 1px solid rgba(48, 209, 88, 0.15);
+            color: #30d158;
+            border-radius: 12px;
+            padding: 0.8rem 1rem;
+            font-size: 0.82rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+    </style>
+    <script src="static/api.js"></script>
+</head>
+<body>
+
+    <div class="background-container" id="bg-container"></div>
+    <div class="background-overlay" id="bg-overlay"></div>
+
+    <!-- Pill-shaped Classic One-line Navbar -->
+    <nav class="navbar-capsule">
+        <a href="index.html" class="nav-logo-group">
+            <img src="static/bg3.png" class="nav-logo-icon" alt="Logo">
+            <span class="nav-logo-text">AI News Summarizer</span>
+        </a>
+
+        <div class="nav-links">
+            <a href="index.html" class="nav-link">Analyze</a>
+            <a href="history.html" class="nav-link">History</a>
+            <a href="dashboard.html" class="nav-link">Dashboard</a>
+        </div>
+
+        <div class="nav-actions">
+            <a href="https://github.com/mayank018-tech/AI-News-summarizer.git" target="_blank" class="github-pill-btn">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round" class="feather feather-github">
+                    <path
+                        d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22">
+                    </path>
+                </svg>
+                <span>GitHub</span>
+            </a>
+
+            <!-- Profile Menu Dropdown -->
+            <div class="profile-container">
+                <button class="profile-btn" id="profile-btn" title="User Profile">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                </button>
+                <div class="profile-dropdown" id="profile-dropdown">
+                    <div class="dropdown-header">
+                        <span class="user-name">{{ session.get('username', 'Guest User') }}</span>
+                        <span class="user-role">Registered MemberGuest</span>
+                    </div>
+                    <div class="dropdown-divider"></div>
+                    
+                    <a href="edit_profile.html" class="dropdown-item">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                        <span>Edit Profile</span>
+                    </a>
+                    <div class="dropdown-divider"></div>
+                    <a href="login.html" class="dropdown-item logout-item">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                        <span>Log Out</span>
+                    </a>
+                    
+                    <a href="login.html" class="dropdown-item">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path><polyline points="10 17 15 12 10 7"></polyline><line x1="15" y1="12" x2="3" y2="12"></line></svg>
+                        <span>Log In</span>
+                    </a>
+                    <a href="signup.html" class="dropdown-item">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
+                        <span>Sign Up</span>
+                    </a>
+                    
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Edit Profile Card -->
+    <div class="edit-profile-container">
+        <div class="auth-header">
+            <h2 class="auth-title">Edit Profile</h2>
+            <p class="auth-subtitle">Update your credentials and account parameters</p>
+        </div>
+
+        {% if error %}
+            <div class="alert-error">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                <span>{{ error }}</span>
+            </div>
+        
+
+        {% if success %}
+            <div class="alert-success">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>{{ success }}</span>
+            </div>
+        
+
+        <form action="edit_profile.html" method="POST">
+            <div class="form-group">
+                <label for="username" class="form-label">Username</label>
+                <input type="text" name="username" id="username" class="form-control" value="{{ user.username }}" required autocomplete="off">
+            </div>
+
+            <div class="form-group">
+                <label for="email" class="form-label">Email Address</label>
+                <input type="email" name="email" id="email" class="form-control" value="{{ user.email }}" required autocomplete="off">
+            </div>
+
+            <div class="form-group" style="margin-bottom: 2rem;">
+                <label for="password" class="form-label">New Password (Leave blank to keep current)</label>
+                <input type="password" name="password" id="password" class="form-control" placeholder="••••••••" autocomplete="new-password">
+            </div>
+
+            <button type="submit" class="btn-primary">Save Changes</button>
+        </form>
+    </div>
+
+    <script>
+        // Parallax and Mouse Lighting Effect
+        const overlay = document.getElementById('bg-overlay');
+        const container = document.getElementById('bg-container');
+
+        let isTicking = false;
+        window.addEventListener('mousemove', (e) => {
+            if (!isTicking) {
+                window.requestAnimationFrame(() => {
+                    const x = (e.clientX / window.innerWidth) * 100;
+                    const y = (e.clientY / window.innerHeight) * 100;
+                    
+                    // Apply variables to overlay instead of documentElement to prevent layout thrashing
+                    const ov = document.getElementById('bg-overlay');
+                    if (ov) {
+                        ov.style.setProperty('--mouse-x', `${x}%`);
+                        ov.style.setProperty('--mouse-y', `${y}%`);
+                    }
+
+                    const moveX = (e.clientX - window.innerWidth / 2) * -0.015;
+                    const moveY = (e.clientY - window.innerHeight / 2) * -0.015;
+                    
+                    const cont = document.getElementById('bg-container');
+                    if (cont) {
+                        cont.style.transform = `translate(${moveX}px, ${moveY}px) scale(1.03)`;
+                    }
+                    isTicking = false;
+                });
+                isTicking = true;
+            }
+        }, { passive: true });
+
+        // Profile Dropdown Toggle
+        const profileBtn = document.getElementById('profile-btn');
+        const profileDropdown = document.getElementById('profile-dropdown');
+        if (profileBtn && profileDropdown) {
+            profileBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                profileDropdown.classList.toggle('show');
+            });
+            document.addEventListener('click', (e) => {
+                if (!profileDropdown.contains(e.target) && !profileBtn.contains(e.target)) {
+                    profileDropdown.classList.remove('show');
+                }
+            });
+        }
+    </script>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const userId = localStorage.getItem('user_id');
+    const guestState = localStorage.getItem('guest_mode');
+    
+    // Auth elements to toggle
+    const loginLink = document.querySelector('a[href="login.html"]');
+    const signupLink = document.querySelector('a[href="signup.html"]');
+    const logoutLink = document.querySelector('a[href="login.html"]'); 
+    
+    // We assume the logout link was replaced with login.html by the regex but we can identify it by text content
+    const navLinks = document.querySelectorAll('.nav-links a');
+    let realLogoutLink = null;
+    navLinks.forEach(link => {
+        if(link.textContent.includes('Logout')) {
+            realLogoutLink = link;
+        }
+    });
+
+    const dashLink = document.querySelector('a[href="dashboard.html"]');
+    const histLink = document.querySelector('a[href="history.html"]');
+    
+    if (realLogoutLink) {
+        realLogoutLink.href = "#";
+        realLogoutLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            localStorage.removeItem('user_id');
+            localStorage.removeItem('username');
+            localStorage.removeItem('guest_mode');
+            window.location.href = 'login.html';
+        });
+    }
+
+    if (userId) {
+        if(loginLink) loginLink.style.display = 'none';
+        if(signupLink) signupLink.style.display = 'none';
+    } else if (guestState === 'true') {
+        if(loginLink) loginLink.style.display = 'none';
+        if(signupLink) signupLink.style.display = 'none';
+        if(realLogoutLink) realLogoutLink.textContent = "Exit Guest Mode";
+    } else {
+        if(realLogoutLink) realLogoutLink.style.display = 'none';
+        if(dashLink) dashLink.style.display = 'none';
+        if(histLink) histLink.style.display = 'none';
+    }
+});
+</script>
+
+</body>
+</html>

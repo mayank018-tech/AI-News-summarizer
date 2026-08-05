@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI News Summarizer - Sign Up</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;400;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #050505;
+            --primary: #ffffff;
+            --card-bg: rgba(255, 255, 255, 0.03);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --text-main: #f3f4f6;
+            --text-muted: #8e8e93;
+            --transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: hidden;
+            position: relative;
+            padding-bottom: 4rem;
+        }
+
+        /* Fullscreen Background Setup */
+        .background-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            background-image: url("static/bg3.jpg");
+            background-size: cover;
+            background-position: center 60%;
+            background-repeat: no-repeat;
+            opacity: 0.65;
+            transition: transform 0.1s ease-out;
+        }
+
+        /* Overlay to blend background with UI */
+        .background-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: radial-gradient(circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(5, 5, 5, 0.2) 0%, rgba(5, 5, 5, 0.92) 80%);
+            pointer-events: none;
+            transition: background 0.1s ease-out;
+        }
+
+        /* Pill-shaped Classic Navbar - White Skeuomorphic One-Line */
+        .navbar-capsule {
+            width: 90%;
+            max-width: 760px;
+            background: linear-gradient(to bottom, #ffffff 0%, #f6f6f9 100%);
+            border-top: 1px solid #ffffff;
+            border-left: 1px solid #ffffff;
+            border-right: 1px solid #e1e1e6;
+            border-bottom: 1px solid #d1d1d6;
+            border-radius: 14px;
+            padding: 0.65rem 1.5rem;
+            margin: 1.5rem auto;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2), 
+                        inset 0 1px 0 rgba(255, 255, 255, 0.9),
+                        inset 0 -1px 2px rgba(0, 0, 0, 0.05);
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+            position: relative;
+        }
+
+        .nav-logo-group {
+            display: flex;
+            align-items: center;
+            gap: 0.65rem;
+            text-decoration: none;
+            color: #1d1d1f;
+        }
+
+        .nav-logo-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            object-fit: cover;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .nav-logo-text {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.05rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            color: #1d1d1f;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1.25rem;
+        }
+
+        .nav-link {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            font-size: 0.92rem;
+            color: #515154;
+            text-decoration: none;
+            transition: var(--transition);
+            position: relative;
+            padding: 0.2rem 0;
+        }
+
+        .nav-link:hover {
+            color: #000000;
+        }
+
+        .nav-link.active {
+            color: #000000;
+        }
+
+        .nav-link.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: #000000;
+            border-radius: 2px;
+        }
+
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+        }
+
+        .theme-toggle-btn {
+            background: none;
+            border: none;
+            font-size: 1.1rem;
+            cursor: pointer;
+            padding: 0.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.3s ease;
+        }
+
+        .theme-toggle-btn:hover {
+            transform: scale(1.15) rotate(-8deg);
+        }
+
+        .github-pill-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.45rem;
+            padding: 0.4rem 0.85rem;
+            border-radius: 8px;
+            background: #1c1c1e;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            font-size: 0.82rem;
+            text-decoration: none;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+            transition: var(--transition);
+        }
+
+        .github-pill-btn:hover {
+            background: #2c2c2e;
+            border-color: rgba(255,255,255,0.2);
+            transform: translateY(-1px);
+        }
+
+        /* Auth Container Card */
+        .auth-container {
+            width: 90%;
+            max-width: 440px;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 24px;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: 2.5rem;
+            margin: 7rem auto 2rem auto;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.03);
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            position: relative;
+            z-index: 10;
+        }
+
+        .auth-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .auth-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.8rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, #ffffff 30%, #a1a1a6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .auth-subtitle {
+            font-size: 0.92rem;
+            color: var(--text-muted);
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.45rem;
+        }
+
+        .form-label {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            color: var(--text-main);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 0.95rem;
+            transition: var(--transition);
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: rgba(255, 255, 255, 0.25);
+            background: rgba(255, 255, 255, 0.04);
+            box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.05),
+                        inset 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .auth-btn {
+            width: 100%;
+            padding: 0.85rem;
+            background: linear-gradient(to bottom, #ffffff 0%, #f0f0f3 100%);
+            border: 1px solid #ffffff;
+            border-radius: 12px;
+            color: #000000;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            font-size: 0.95rem;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.9);
+            transition: var(--transition);
+            margin-top: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .auth-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.9);
+        }
+
+        .auth-btn:active {
+            transform: translateY(0);
+        }
+
+        .auth-footer {
+            text-align: center;
+            margin-top: 1.5rem;
+            font-size: 0.88rem;
+            color: var(--text-muted);
+        }
+
+        .auth-link {
+            color: #ffffff;
+            text-decoration: none;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+
+        .auth-link:hover {
+            text-decoration: underline;
+        }
+
+
+    </style>
+    <script src="static/api.js"></script>
+</head>
+<body>
+    <div class="background-container" id="bg-container"></div>
+    <div class="background-overlay" id="bg-overlay"></div>
+
+
+
+
+
+    <!-- Auth Container -->
+    <div class="auth-container">
+        <div class="auth-header">
+            <h2 class="auth-title">Create Account</h2>
+            <p class="auth-subtitle">Sign up to analyze news articles & track stats</p>
+        </div>
+
+        <form action="signup.html" method="POST">
+            <div class="form-group">
+                <label for="username" class="form-label">Username</label>
+                <input type="text" id="username" name="username" class="form-input" placeholder="Choose a username" required>
+            </div>
+
+            <div class="form-group">
+                <label for="email" class="form-label">Email Address</label>
+                <input type="email" id="email" name="email" class="form-input" placeholder="you@example.com" required>
+            </div>
+
+            <div class="form-group">
+                <label for="password" class="form-label">Password</label>
+                <input type="password" id="password" name="password" class="form-input" placeholder="••••••••" required>
+            </div>
+
+            <button type="submit" class="auth-btn">
+                <span>Sign Up</span>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                    <polyline points="12 5 19 12 12 19"></polyline>
+                </svg>
+            </button>
+        </form>
+
+        <div class="auth-footer">
+            Already have an account? <a href="login.html" class="auth-link">Log In</a>
+        </div>
+    </div>
+
+    <!-- Mouse Tracking Background Interaction script -->
+    <script>
+        const bgContainer = document.getElementById('bg-container');
+        const bgOverlay = document.getElementById('bg-overlay');
+
+        let isTicking = false;
+        window.addEventListener('mousemove', (e) => {
+            if (!isTicking) {
+                window.requestAnimationFrame(() => {
+                    const x = (e.clientX / window.innerWidth) * 100;
+                    const y = (e.clientY / window.innerHeight) * 100;
+                    
+                    // Apply variables to overlay instead of documentElement to prevent layout thrashing
+                    const ov = document.getElementById('bg-overlay');
+                    if (ov) {
+                        ov.style.setProperty('--mouse-x', `${x}%`);
+                        ov.style.setProperty('--mouse-y', `${y}%`);
+                    }
+
+                    const moveX = (e.clientX - window.innerWidth / 2) * -0.015;
+                    const moveY = (e.clientY - window.innerHeight / 2) * -0.015;
+                    
+                    const cont = document.getElementById('bg-container');
+                    if (cont) {
+                        cont.style.transform = `translate(${moveX}px, ${moveY}px) scale(1.03)`;
+                    }
+                    isTicking = false;
+                });
+                isTicking = true;
+            }
+        }, { passive: true });
+    </script>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const userId = localStorage.getItem('user_id');
+    const guestState = localStorage.getItem('guest_mode');
+    
+    // Auth elements to toggle
+    const loginLink = document.querySelector('a[href="login.html"]');
+    const signupLink = document.querySelector('a[href="signup.html"]');
+    const logoutLink = document.querySelector('a[href="login.html"]'); 
+    
+    // We assume the logout link was replaced with login.html by the regex but we can identify it by text content
+    const navLinks = document.querySelectorAll('.nav-links a');
+    let realLogoutLink = null;
+    navLinks.forEach(link => {
+        if(link.textContent.includes('Logout')) {
+            realLogoutLink = link;
+        }
+    });
+
+    const dashLink = document.querySelector('a[href="dashboard.html"]');
+    const histLink = document.querySelector('a[href="history.html"]');
+    
+    if (realLogoutLink) {
+        realLogoutLink.href = "#";
+        realLogoutLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            localStorage.removeItem('user_id');
+            localStorage.removeItem('username');
+            localStorage.removeItem('guest_mode');
+            window.location.href = 'login.html';
+        });
+    }
+
+    if (userId) {
+        if(loginLink) loginLink.style.display = 'none';
+        if(signupLink) signupLink.style.display = 'none';
+    } else if (guestState === 'true') {
+        if(loginLink) loginLink.style.display = 'none';
+        if(signupLink) signupLink.style.display = 'none';
+        if(realLogoutLink) realLogoutLink.textContent = "Exit Guest Mode";
+    } else {
+        if(realLogoutLink) realLogoutLink.style.display = 'none';
+        if(dashLink) dashLink.style.display = 'none';
+        if(histLink) histLink.style.display = 'none';
+    }
+});
+</script>
+
+</body>
+</html>
