@@ -115,8 +115,8 @@ app.secret_key = os.environ.get('SECRET_KEY', 'default_secret_key_1234')
 # Use Supabase Database URL or a local SQLite backup
 db_url = os.environ.get('DATABASE_URL')
 if not db_url:
-    # Use fallback SQLite database in data folder so the app runs even if DB URL is not provided yet
-    db_url = 'sqlite:///' + os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', 'app.db')
+    # Use fallback SQLite database in /tmp folder so the app runs on Vercel's read-only file system
+    db_url = 'sqlite:////tmp/app.db'
 else:
     # Correct connection string prefix if it starts with postgres:// (SQLAlchemy requires postgresql://)
     if db_url.startswith("postgres://"):
