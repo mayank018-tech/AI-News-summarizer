@@ -375,21 +375,32 @@
         const bgContainer = document.getElementById('bg-container');
         const bgOverlay = document.getElementById('bg-overlay');
 
-        document.addEventListener('mousemove', (e) => {
-            const mouseX = e.clientX;
-            const mouseY = e.clientY;
-            
-            const percentX = (mouseX / window.innerWidth) * 100;
-            const percentY = (mouseY / window.innerHeight) * 100;
+        let isTicking = false;
+        window.addEventListener('mousemove', (e) => {
+            if (!isTicking) {
+                window.requestAnimationFrame(() => {
+                    const x = (e.clientX / window.innerWidth) * 100;
+                    const y = (e.clientY / window.innerHeight) * 100;
+                    
+                    // Apply variables to overlay instead of documentElement to prevent layout thrashing
+                    const ov = document.getElementById('bg-overlay');
+                    if (ov) {
+                        ov.style.setProperty('--mouse-x', `${x}%`);
+                        ov.style.setProperty('--mouse-y', `${y}%`);
+                    }
 
-            document.documentElement.style.setProperty('--mouse-x', `${percentX}%`);
-            document.documentElement.style.setProperty('--mouse-y', `${percentY}%`);
-
-            // Subtle parallax effect on background blur
-            const moveX = (mouseX - window.innerWidth / 2) * 0.015;
-            const moveY = (mouseY - window.innerHeight / 2) * 0.015;
-            bgContainer.style.transform = `translate(${moveX}px, ${moveY}px) scale(1.02)`;
-        });
+                    const moveX = (e.clientX - window.innerWidth / 2) * -0.015;
+                    const moveY = (e.clientY - window.innerHeight / 2) * -0.015;
+                    
+                    const cont = document.getElementById('bg-container');
+                    if (cont) {
+                        cont.style.transform = `translate(${moveX}px, ${moveY}px) scale(1.03)`;
+                    }
+                    isTicking = false;
+                });
+                isTicking = true;
+            }
+        }, { passive: true });
     </script>
 </body>
 </html>
