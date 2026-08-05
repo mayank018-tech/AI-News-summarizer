@@ -115,9 +115,9 @@ def add_header(response):
         response.headers['Cache-Control'] = 'public, max-age=31536000'
     else:
         # Prevent caching for dynamic routes and API
-        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+        response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
         response.headers['Pragma'] = 'no-cache'
-        response.headers['Expires'] = '0'
+        response.headers['Expires'] = '-1'
     return response
 
 app.secret_key = os.environ.get('SECRET_KEY', 'default_secret_key_1234')
@@ -169,6 +169,14 @@ def check_valid_session():
         user = User.query.get(session['user_id'])
         if not user:
             session.clear()
+            return redirect(url_for('login'))
+            
+    # Require login for protected routes
+    protected_endpoints = ['dashboard', 'history', 'edit_profile', 'api_history', 'api_dashboard']
+    if request.endpoint in protected_endpoints and 'user_id' not in session:
+        if request.path.startswith('/api/'):
+            return jsonify({'error': 'Unauthorized'}), 401
+        return redirect(url_for('login'))
 
 @app.route('/')
 def index():
