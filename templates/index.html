@@ -1236,10 +1236,11 @@
         if (profileBtn && profileDropdown) {
             profileBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
+                e.preventDefault();
                 profileDropdown.classList.toggle('show');
             });
             document.addEventListener('click', (e) => {
-                if (!profileDropdown.contains(e.target) && e.target !== profileBtn) {
+                if (!profileDropdown.contains(e.target) && !profileBtn.contains(e.target)) {
                     profileDropdown.classList.remove('show');
                 }
             });
@@ -1267,6 +1268,8 @@
                 workspaceOutput.textContent = 'Analysis results will appear here...';
                 cachedNlpResult = null;
             });
+        }
+
         // Prefill from history if redirected
         const prefillRaw = {{ prefill_text|default('null')|tojson|safe }};
         if (prefillRaw && prefillRaw !== 'null' && prefillRaw.trim() !== '') {
@@ -1275,7 +1278,6 @@
             setTimeout(() => {
                 triggerDebouncedAnalysis();
             }, 500);
-        }
     </script>
 </body>
 
