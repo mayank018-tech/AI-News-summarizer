@@ -105,9 +105,14 @@ app.config['SESSION_COOKIE_SECURE'] = True
 
 @app.after_request
 def add_header(response):
-    response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
-    response.headers['Pragma'] = 'no-cache'
-    response.headers['Expires'] = '0'
+    # If the request is for a static file (like images, CSS, JS), allow caching
+    if request.path.startswith('/static/'):
+        response.headers['Cache-Control'] = 'public, max-age=31536000'
+    else:
+        # Prevent caching for dynamic routes and API
+        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+        response.headers['Pragma'] = 'no-cache'
+        response.headers['Expires'] = '0'
     return response
 
 app.secret_key = os.environ.get('SECRET_KEY', 'default_secret_key_1234')
