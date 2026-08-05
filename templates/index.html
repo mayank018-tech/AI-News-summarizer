@@ -668,7 +668,7 @@
         /* Tab Bar Capsule - Matches Navbar style */
         .tab-bar-capsule {
             width: 100%;
-            max-width: 680px;
+            max-width: 960px;
             margin: 0 auto 0.5rem auto;
             background: linear-gradient(to bottom, #ffffff 0%, #f6f6f9 100%);
             border-top: 1px solid #ffffff;
@@ -680,6 +680,8 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-wrap: wrap;
+            gap: 0.2rem;
             box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15), 
                         inset 0 1px 0 rgba(255, 255, 255, 0.9);
         }
@@ -967,6 +969,11 @@
             <button class="tab-link" data-tab="2">Category</button>
             <button class="tab-link" data-tab="3">Entities</button>
             <button class="tab-link" data-tab="4">Keywords</button>
+            <button class="tab-link" data-tab="5">Credibility</button>
+            <button class="tab-link" data-tab="6">Bias</button>
+            <button class="tab-link" data-tab="7">Company</button>
+            <button class="tab-link" data-tab="8">Brief</button>
+            <button class="tab-link" data-tab="9">AI Terms</button>
         </div>
 
         <!-- split editor / output screen -->
@@ -1111,6 +1118,47 @@
                     const kwList = cachedNlpResult.keywords || [];
                     resultText = kwList.length ? `Top Keywords:\n${kwList.map((kw, i) => `${i + 1}. #${kw}`).join('\n')}` : "No significant keywords extracted.";
                     break;
+                case 'credibility':
+                    outputLabel.textContent = "Credibility Score";
+                    const cred = cachedNlpResult.credibility || {};
+                    resultText = cred.error ? `Error: ${cred.error}` : `Score: ${cred.score}/100\n\nExplanation:\n${cred.explanation || 'No explanation.'}`;
+                    break;
+                case 'bias':
+                    outputLabel.textContent = "Bias Detection";
+                    const bias = cachedNlpResult.bias || {};
+                    resultText = bias.error ? `Error: ${bias.error}` : `Type: ${bias.overall_bias || 'Unknown'}\n\nExplanation:\n${bias.explanation || 'No explanation.'}`;
+                    break;
+                case 'company':
+                    outputLabel.textContent = "Company Insights";
+                    const comp = cachedNlpResult.company_insights;
+                    if (comp && comp.error) {
+                        resultText = `Error: ${comp.error}`;
+                    } else if (Array.isArray(comp) && comp.length > 0) {
+                        resultText = `Companies Mentioned:\n${comp.map(c => `- ${c.name} (Role: ${c.role})`).join('\n')}`;
+                    } else {
+                        resultText = "No companies detected.";
+                    }
+                    break;
+                case 'brief':
+                    outputLabel.textContent = "5-Second Brief";
+                    const brief = cachedNlpResult.brief;
+                    if (brief && brief.error) {
+                        resultText = `Error: ${brief.error}`;
+                    } else {
+                        resultText = brief || "No brief available.";
+                    }
+                    break;
+                case 'terms':
+                    outputLabel.textContent = "AI Terminology Explainer";
+                    const terms = cachedNlpResult.terminology;
+                    if (terms && terms.error) {
+                        resultText = `Error: ${terms.error}`;
+                    } else if (Array.isArray(terms) && terms.length > 0) {
+                        resultText = `AI Terms Explained:\n${terms.map(t => `- ${t.term}: ${t.definition}`).join('\n')}`;
+                    } else {
+                        resultText = "No specific AI terminology detected.";
+                    }
+                    break;
             }
             workspaceOutput.textContent = resultText;
         }
@@ -1165,7 +1213,7 @@
         });
 
         // Tab Switching
-        const tabMapping = ['summarize', 'sentiment', 'category', 'entities', 'keywords'];
+        const tabMapping = ['summarize', 'sentiment', 'category', 'entities', 'keywords', 'credibility', 'bias', 'company', 'brief', 'terms'];
         tabLinks.forEach((tab, index) => {
             tab.addEventListener('click', () => {
                 tabLinks.forEach(t => t.classList.remove('active'));
