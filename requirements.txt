@@ -67,9 +67,9 @@ sympy==1.14.0
 thinc==8.3.13
 threadpoolctl==3.6.0
 tokenizers==0.22.2
-torch==2.13.0+cpu
-torchaudio==2.11.0+cpu
-torchvision==0.28.0+cpu
+torch==2.13.0
+torchaudio==2.11.0
+torchvision==0.28.0
 tqdm==4.70.0
 transformers==5.14.1
 typer==0.27.1
