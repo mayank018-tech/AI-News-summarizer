@@ -19,11 +19,11 @@ TECH_KEYWORDS = {
 
 # Define roles based on keywords
 ROLE_MAPPING = {
-    "developer": ["developed", "created", "built", "launched", "announced", "released", "maker", "creator", "model"],
-    "investor": ["invested", "funded", "backed", "acquired", "bought", "valuation", "stake"],
-    "partner": ["partnered", "collaboration", "together", "joint", "alliance"],
-    "competitor": ["rival", "competitor", "versus", "competing", "challenge"],
-    "regulator": ["sued", "investigation", "banned", "regulation", "lawsuit", "court", "government"]
+    "developer": ["developed", "created", "built", "launched", "maker", "creator", "engineered", "designed"],
+    "investor": ["invested", "funded", "backed", "acquired", "bought", "valuation", "stake", "seed round"],
+    "partner": ["partnered", "collaboration", "together", "joint", "alliance", "partnering"],
+    "competitor": ["rival", "competitor", "versus", "competing", "challenge", "outperform"],
+    "regulator": ["sued", "investigation", "banned", "regulation", "lawsuit", "court", "government", "fined", "regulator"]
 }
 
 def _get_surrounding_sentences(doc, entity, window=1):
