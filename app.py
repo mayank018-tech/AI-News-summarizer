@@ -31,6 +31,8 @@ import datetime
 import urllib.request
 import re
 
+from bs4 import BeautifulSoup
+
 def fetch_article_text(url):
     try:
         if not url.startswith('http://') and not url.startswith('https://'):
@@ -40,29 +42,30 @@ def fetch_article_text(url):
             url, 
             headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'}
         )
-        with urllib.request.urlopen(req, timeout=10) as response:
+        with urllib.request.urlopen(req, timeout=15) as response:
             html = response.read().decode('utf-8', errors='ignore')
         
-        # Strip script & style elements
-        text = re.sub(r'<script.*?>.*?</script>', '', html, flags=re.DOTALL | re.IGNORECASE)
-        text = re.sub(r'<style.*?>.*?</style>', '', text, flags=re.DOTALL | re.IGNORECASE)
-        text = re.sub(r'<.*?>', ' ', text)
+        # Use BeautifulSoup to parse HTML and extract only paragraph text
+        soup = BeautifulSoup(html, 'html.parser')
+        paragraphs = soup.find_all('p')
         
-        # Clean up whitespace and empty lines
-        lines = (line.strip() for line in text.splitlines())
-        chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
-        text = '\n'.join(chunk for chunk in chunks if chunk)
-        
-        # Filter down to the main content (ignore layout boilerplate header/footer if possible)
-        text_lines = text.split('\n')
-        # Keep only paragraphs/lines with actual sentence structure
-        content_lines = [line for line in text_lines if len(line) > 40 and not any(kw in line.lower() for kw in ['cookies', 'privacy policy', 'all rights reserved', 'sign up', 'subscribe'])]
-        
+        content_lines = []
+        for p in paragraphs:
+            p_text = p.get_text(separator=' ', strip=True)
+            # Basic filter: ignore very short paragraphs or obvious boilerplate
+            if len(p_text) > 40 and not any(kw in p_text.lower() for kw in ['cookies', 'privacy policy', 'all rights reserved', 'sign up', 'subscribe']):
+                content_lines.append(p_text)
+                
         cleaned_text = '\n'.join(content_lines)
+        
+        # Fallback to general text if no valid paragraphs found
         if len(cleaned_text) < 150:
-            cleaned_text = '\n'.join(text_lines) # Fallback to all text if filter was too aggressive
+            # Remove scripts, styles, etc.
+            for elem in soup(['script', 'style', 'nav', 'footer', 'header', 'aside']):
+                elem.extract()
+            cleaned_text = soup.get_text(separator='\n', strip=True)
             
-        return cleaned_text[:4000] # Cap text length to prevent huge context sizes
+        return cleaned_text[:10000] # Cap text length to prevent huge context sizes
     except Exception as e:
         return f"Failed to retrieve article content: {str(e)}"
 
