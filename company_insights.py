@@ -54,10 +54,26 @@ def extract_company_insights(text, max_companies=5):
     # Process text (limit to 10k chars to keep it fast)
     doc = nlp(text[:10000])
     
-    # Filter for ORGs
-    orgs = [ent for ent in doc.ents if ent.label_ == "ORG"]
+    from ner import _TECH_TERMS, _is_org_in_context
     
+    # Filter for ORGs
+    orgs = []
+    for ent in doc.ents:
+        if ent.label_ == "ORG":
+            # Skip if it's a technology acting as a concept, not a company
+            is_tech = False
+            for tech in _TECH_TERMS:
+                if ent.text.strip().lower() == tech.lower():
+                    is_tech = True
+                    break
+                    
+            if is_tech and not _is_org_in_context(ent, doc):
+                continue
+                
+            orgs.append(ent)
+            
     # Count occurrences by normalized text
+
     org_counts = Counter([ent.text.strip().replace('\n', ' ') for ent in orgs])
     
     # Standardize names (e.g. "OpenAI" and "OpenAI's" -> "OpenAI")
