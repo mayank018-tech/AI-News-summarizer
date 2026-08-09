@@ -5,9 +5,9 @@ Enhances the raw MIT_AI_ARTICLES.csv dataset with derived features and
 auto-generated category labels, then trains a TF-IDF + Logistic Regression
 pipeline to classify articles into 3 categories:
 
-  0 → AI Technology & Systems
-  1 → Research & Science
-  2 → Policy, Law & Ethics
+  0 -> AI Technology & Systems
+  1 -> Research & Science
+  2 -> Policy, Law & Ethics
 
 Outputs:
   ml_model/category_classifier.pkl   — trained pipeline (vectorizer + model)
@@ -31,13 +31,13 @@ from sklearn.metrics import (
     classification_report, accuracy_score, confusion_matrix, f1_score
 )
 
-# ── Paths ──────────────────────────────────────────────────────────────────────
+# -- Paths ----------------------------------------------------------------------
 BASE_DIR     = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA_CSV     = os.path.join(BASE_DIR, "data", "MIT_AI_ARTICLES.csv")
 ENHANCED_CSV = os.path.join(BASE_DIR, "data", "MIT_AI_ARTICLES_enhanced.csv")
 MODEL_PATH   = os.path.join(BASE_DIR, "ml_model", "category_classifier.pkl")
 
-# ── Category label definitions ─────────────────────────────────────────────────
+# -- Category label definitions ------------------------------------------------─
 LABEL_MAP = {
     0: "AI Technology & Systems",
     1: "Research & Science",
@@ -104,7 +104,7 @@ def clean_text(text: str) -> str:
     return text
 
 
-# ── 1. Load raw dataset ────────────────────────────────────────────────────────
+# -- 1. Load raw dataset --------------------------------------------------------
 print("=" * 60)
 print("  MIT AI Articles — ML Training Pipeline")
 print("=" * 60)
@@ -113,8 +113,8 @@ print(f"\n[1/6] Loading dataset from: {DATA_CSV}")
 df = pd.read_csv(DATA_CSV, low_memory=False)
 print(f"      Raw rows: {len(df):,}  |  Columns: {list(df.columns)}")
 
-# ── 2. Dataset Enhancement ────────────────────────────────────────────────────
-print("\n[2/6] Enhancing dataset …")
+# -- 2. Dataset Enhancement ----------------------------------------------------
+print("\n[2/6] Enhancing dataset ...")
 
 # Drop rows missing critical fields
 df = df.dropna(subset=["title", "body"])
@@ -145,7 +145,7 @@ def extract_year(val):
 df["year"] = df["publication_date"].apply(extract_year)
 
 # Auto-label every article using keyword scoring
-print("      Auto-labeling categories …")
+print("      Auto-labeling categories ...")
 df["label"] = df["combined_text"].apply(score_text)
 df["category"] = df["label"].map(LABEL_MAP)
 
@@ -158,10 +158,10 @@ for cat, cnt in dist.items():
 
 # Save enhanced CSV
 df.to_csv(ENHANCED_CSV, index=False)
-print(f"\n      ✓ Enhanced dataset saved → {ENHANCED_CSV}")
+print(f"\n      OK Enhanced dataset saved -> {ENHANCED_CSV}")
 
-# ── 3. Prepare Features & Labels ──────────────────────────────────────────────
-print("\n[3/6] Preparing features …")
+# -- 3. Prepare Features & Labels ----------------------------------------------
+print("\n[3/6] Preparing features ...")
 
 df["input_text"] = df["combined_text"].apply(clean_text)
 X = df["input_text"].values
@@ -172,8 +172,8 @@ X_train, X_test, y_train, y_test = train_test_split(
 )
 print(f"      Train: {len(X_train):,}  |  Test: {len(X_test):,}")
 
-# ── 4. Train & Compare Models ─────────────────────────────────────────────────
-print("\n[4/6] Training & comparing models …\n")
+# -- 4. Train & Compare Models ------------------------------------------------─
+print("\n[4/6] Training & comparing models ...\n")
 
 candidates = {
     "Logistic Regression": LogisticRegression(
@@ -201,7 +201,7 @@ for name, clf in candidates.items():
     preds    = pipe.predict(X_test)
     accuracy = accuracy_score(y_test, preds)
     macro_f1 = f1_score(y_test, preds, average="macro")
-    print(f"  ── {name}")
+    print(f"  -- {name}")
     print(f"     Accuracy : {accuracy * 100:.2f}% | Macro F1: {macro_f1:.3f}")
     print(classification_report(
         y_test, preds,
@@ -213,12 +213,12 @@ for name, clf in candidates.items():
         best_name     = name
         best_pipeline = pipe
 
-# ── 5. Save Best Model ─────────────────────────────────────────────────────────
+# -- 5. Save Best Model --------------------------------------------------------─
 print(f"\n[5/6] Best model: {best_name}  (Macro F1 = {best_metric:.3f})")
 joblib.dump(best_pipeline, MODEL_PATH)
-print(f"      ✓ Model saved → {MODEL_PATH}")
+print(f"      OK Model saved -> {MODEL_PATH}")
 
-# ── 6. Confusion Matrix ────────────────────────────────────────────────────────
+# -- 6. Confusion Matrix --------------------------------------------------------
 print("\n[6/6] Confusion matrix (best model):")
 preds_best = best_pipeline.predict(X_test)
 cm = confusion_matrix(y_test, preds_best)
