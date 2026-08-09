@@ -500,7 +500,7 @@
             transform: rotate(15deg);
         }
 
-        @media (max-width: 1280px) {
+        @media (max-width: 800px) {
             .side-newspaper {
                 display: none;
             }
@@ -529,8 +529,53 @@
             transform: translateX(-2px);
             border-color: rgba(255, 255, 255, 0.15);
         }
+
+        /* Mobile Responsiveness */
+        @media (max-width: 768px) {
+            body {
+                padding-bottom: 2rem;
+            }
+            .background-container {
+                background-size: cover;
+                background-position: center top;
+            }
+            .navbar-capsule {
+                flex-direction: column;
+                padding: 1rem 1.2rem;
+                gap: 1rem;
+                border-radius: 20px;
+                width: 95%;
+                margin: 1rem auto;
+                height: auto;
+            }
+            .nav-logo-group {
+                width: 100%;
+                justify-content: center;
+                margin-bottom: 0.2rem;
+            }
+            .nav-links {
+                width: 100%;
+                justify-content: center;
+                gap: 1.5rem;
+                flex-wrap: wrap;
+            }
+            .nav-actions {
+                width: 100%;
+                justify-content: center;
+                margin-top: 0.5rem;
+            }
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+                padding: 0 0.5rem;
+            }
+            .main-title {
+                font-size: 2rem;
+                line-height: 1.2;
+                margin-top: 1rem;
+            }
+        }
     </style>
-    <script src="static/api.js"></script>
 </head>
 <body>
 
@@ -619,23 +664,23 @@
     <div class="stats-grid">
         <div class="stat-card">
             <div class="stat-label">Total Articles</div>
-            <div class="stat-value"><span id="stat-total"></span></div>
+            <div class="stat-value">{{ stats.total }}</div>
             <div class="stat-desc">Analyzed news pieces</div>
         </div>
         <div class="stat-card">
             <div class="stat-label">Positive Sentiment</div>
-            <div class="stat-value"><span id="stat-pos"></span></div>
+            <div class="stat-value">{{ stats.pos }}</div>
             <div class="stat-desc">Optimistic insights</div>
         </div>
         <div class="stat-card">
             <div class="stat-label">Avg Sentiment Score</div>
-            <div class="stat-value"><span id="stat-avg_score"></span></div>
+            <div class="stat-value">{{ stats.avg_score }}</div>
             <div class="stat-desc">Scale of -1.0 to +1.0</div>
         </div>
         <div class="stat-card">
             <div class="stat-label">Top Domain</div>
             <div class="stat-value" style="font-size: 1.15rem; line-height: 2.2rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 600;">
-                {% if stats.total > 0 %}<span id="stat-top_category"></span>None
+                {% if stats.total > 0 %}{{ stats.top_category }}None
             </div>
             <div class="stat-desc">Most analyzed topic</div>
         </div>
@@ -650,7 +695,7 @@
             <div class="progress-bar-container">
                 <div class="progress-label-row">
                     <span>AI Technology & Systems</span>
-                    <span><span id="stat-tech"></span></span>
+                    <span>{{ stats.tech }}</span>
                 </div>
                 <div class="progress-bar-bg">
                     <div class="progress-bar-fill" style="width: {% if stats.total > 0 %}{{ (stats.tech / stats.total * 100)|round(1) }}0%;"></div>
@@ -660,7 +705,7 @@
             <div class="progress-bar-container">
                 <div class="progress-label-row">
                     <span>Research & Science</span>
-                    <span><span id="stat-research"></span></span>
+                    <span>{{ stats.research }}</span>
                 </div>
                 <div class="progress-bar-bg">
                     <div class="progress-bar-fill" style="width: {% if stats.total > 0 %}{{ (stats.research / stats.total * 100)|round(1) }}0%;"></div>
@@ -670,7 +715,7 @@
             <div class="progress-bar-container" style="margin-bottom: 0;">
                 <div class="progress-label-row">
                     <span>Policy, Law & Ethics</span>
-                    <span><span id="stat-policy"></span></span>
+                    <span>{{ stats.policy }}</span>
                 </div>
                 <div class="progress-bar-bg">
                     <div class="progress-bar-fill" style="width: {% if stats.total > 0 %}{{ (stats.policy / stats.total * 100)|round(1) }}0%;"></div>
@@ -685,7 +730,7 @@
             <div class="progress-bar-container">
                 <div class="progress-label-row">
                     <span>Positive</span>
-                    <span><span id="stat-pos"></span></span>
+                    <span>{{ stats.pos }}</span>
                 </div>
                 <div class="progress-bar-bg">
                     <div class="progress-bar-fill" style="background: linear-gradient(90deg, #30d158 0%, #248a3d 100%); width: {% if stats.total > 0 %}{{ (stats.pos / stats.total * 100)|round(1) }}0%;"></div>
@@ -695,7 +740,7 @@
             <div class="progress-bar-container">
                 <div class="progress-label-row">
                     <span>Neutral</span>
-                    <span><span id="stat-neu"></span></span>
+                    <span>{{ stats.neu }}</span>
                 </div>
                 <div class="progress-bar-bg">
                     <div class="progress-bar-fill" style="background: linear-gradient(90deg, #8e8e93 0%, #636366 100%); width: {% if stats.total > 0 %}{{ (stats.neu / stats.total * 100)|round(1) }}0%;"></div>
@@ -705,7 +750,7 @@
             <div class="progress-bar-container" style="margin-bottom: 0;">
                 <div class="progress-label-row">
                     <span>Negative</span>
-                    <span><span id="stat-neg"></span></span>
+                    <span>{{ stats.neg }}</span>
                 </div>
                 <div class="progress-bar-bg">
                     <div class="progress-bar-fill" style="background: linear-gradient(90deg, #ff453a 0%, #b32e25 100%); width: {% if stats.total > 0 %}{{ (stats.neg / stats.total * 100)|round(1) }}0%;"></div>
@@ -819,25 +864,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if(realLogoutLink) realLogoutLink.style.display = 'none';
         if(dashLink) dashLink.style.display = 'none';
         if(histLink) histLink.style.display = 'none';
-    }
-});
-</script>
-
-
-<script>
-document.addEventListener('DOMContentLoaded', async () => {
-    try {
-        const response = await apiFetch('/api/dashboard');
-        const data = await response.json();
-        
-        for (const [key, value] of Object.entries(data)) {
-            const el = document.getElementById('stat-' + key);
-            if (el) {
-                el.textContent = value;
-            }
-        }
-    } catch(e) {
-        console.error("Dashboard fetch error:", e);
     }
 });
 </script>

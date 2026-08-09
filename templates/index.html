@@ -797,13 +797,92 @@
             }
         }
 
-        /* Responsive Split View */
+        /* Mobile Responsiveness */
         @media (max-width: 768px) {
+            body {
+                padding-bottom: 2rem;
+            }
+            .background-container {
+                background-size: cover;
+                background-position: center top;
+            }
+            .navbar-capsule {
+                flex-direction: column;
+                padding: 1rem 1.2rem;
+                gap: 1rem;
+                border-radius: 20px;
+                width: 95%;
+                margin: 1rem auto;
+                height: auto;
+            }
+            .nav-logo-group {
+                width: 100%;
+                justify-content: center;
+                margin-bottom: 0.2rem;
+            }
+            .nav-links {
+                width: 100%;
+                justify-content: center;
+                gap: 1.5rem;
+                flex-wrap: wrap;
+            }
+            .nav-actions {
+                width: 100%;
+                justify-content: center;
+                margin-top: 0.5rem;
+            }
+            .hero-section {
+                padding: 1rem 1rem;
+                margin-top: 1rem;
+            }
+            .main-title {
+                font-size: 2rem;
+                line-height: 1.2;
+            }
+            .sub-title {
+                font-size: 0.95rem;
+                margin-bottom: 1.5rem;
+            }
+            .analyze-container {
+                flex-direction: column;
+                padding: 1rem;
+                border-radius: 16px;
+                width: 95%;
+            }
+            .analyze-input {
+                width: 100%;
+                font-size: 0.95rem;
+                padding: 0.8rem;
+            }
+            .analyze-btn {
+                width: 100%;
+                justify-content: center;
+                padding: 0.8rem;
+            }
+            .tab-container {
+                overflow-x: auto;
+                white-space: nowrap;
+                justify-content: flex-start;
+                padding-bottom: 8px;
+                margin-top: 1rem;
+                -webkit-overflow-scrolling: touch;
+            }
+            .tab-container::-webkit-scrollbar {
+                height: 4px;
+            }
+            .tab-container::-webkit-scrollbar-thumb {
+                background-color: rgba(255,255,255,0.3);
+                border-radius: 2px;
+            }
             .split-workspace {
                 grid-template-columns: 1fr;
+                gap: 1rem;
+                padding: 0 0.5rem;
             }
             .workspace-panel {
-                height: 320px;
+                height: 400px;
+                padding: 1.2rem;
+                border-radius: 16px;
             }
         }
     </style>

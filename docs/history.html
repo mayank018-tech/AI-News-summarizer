@@ -586,8 +586,53 @@
         .original-text-box::-webkit-scrollbar-thumb:hover {
             background: rgba(255,255,255,0.2);
         }
+
+        /* Mobile Responsiveness */
+        @media (max-width: 768px) {
+            body {
+                padding-bottom: 2rem;
+            }
+            .background-container {
+                background-size: cover;
+                background-position: center top;
+            }
+            .navbar-capsule {
+                flex-direction: column;
+                padding: 1rem 1.2rem;
+                gap: 1rem;
+                border-radius: 20px;
+                width: 95%;
+                margin: 1rem auto;
+                height: auto;
+            }
+            .nav-logo-group {
+                width: 100%;
+                justify-content: center;
+                margin-bottom: 0.2rem;
+            }
+            .nav-links {
+                width: 100%;
+                justify-content: center;
+                gap: 1.5rem;
+                flex-wrap: wrap;
+            }
+            .nav-actions {
+                width: 100%;
+                justify-content: center;
+                margin-top: 0.5rem;
+            }
+            .history-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+                padding: 0 0.5rem;
+            }
+            .main-title {
+                font-size: 2rem;
+                line-height: 1.2;
+                margin-top: 1rem;
+            }
+        }
     </style>
-    <script src="static/api.js"></script>
 </head>
 <body>
 
@@ -825,46 +870,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if(realLogoutLink) realLogoutLink.style.display = 'none';
         if(dashLink) dashLink.style.display = 'none';
         if(histLink) histLink.style.display = 'none';
-    }
-});
-</script>
-
-
-<script>
-document.addEventListener('DOMContentLoaded', async () => {
-    try {
-        const response = await apiFetch('/api/history');
-        const data = await response.json();
-        
-        const container = document.getElementById('history-grid-container');
-        if (!container) return;
-        
-        container.innerHTML = ''; // clear existing dummy items
-        
-        if (data.history && data.history.length > 0) {
-            data.history.forEach(item => {
-                const card = document.createElement('div');
-                card.className = 'history-card';
-                card.innerHTML = `
-                    <div class="card-header">
-                        <h3>${item.headline}</h3>
-                        <span class="date">${item.created_at}</span>
-                    </div>
-                    <div class="card-body">
-                        <p>${item.summary_text.substring(0, 150)}...</p>
-                    </div>
-                    <div class="card-footer">
-                        <span class="badge category">${item.primary_category || 'Uncategorized'}</span>
-                        <span class="badge sentiment ${item.sentiment_label ? item.sentiment_label.toLowerCase() : ''}">${item.sentiment_label || 'Neutral'}</span>
-                    </div>
-                `;
-                container.appendChild(card);
-            });
-        } else {
-            container.innerHTML = '<p class="empty-state">No analysis history found.</p>';
-        }
-    } catch(e) {
-        console.error("History fetch error:", e);
     }
 });
 </script>
