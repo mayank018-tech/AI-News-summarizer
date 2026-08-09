@@ -144,16 +144,49 @@ def _looks_like_person(text: str) -> bool:
     return all(w[0].isupper() for w in words if w.isalpha())
 
 
+# Common tech terms often misclassified as ORG by spaCy
+_TECH_TERMS: set[str] = {
+    "AI", "ML", "NLP", "Python", "Java", "JavaScript", "React", "C++", 
+    "Vue", "Angular", "Node.js", "Docker", "Kubernetes", "API", "HTML", "CSS", 
+    "SQL", "Machine Learning", "Artificial Intelligence", "AGI", "Deep Learning",
+    "Computer Vision", "Blockchain", "Web3", "Crypto"
+}
+
+def _is_org_in_context(ent, doc) -> bool:
+    """
+    Determine if an entity is acting as an ORG based on surrounding context.
+    e.g., 'AI Inc', 'CEO of AI', 'Python Software Foundation'.
+    """
+    org_indicators = {"inc", "inc.", "corp", "corp.", "corporation", "ltd", "ltd.", 
+                      "foundation", "company", "co.", "co", "institute", "lab", "labs",
+                      "group", "agency", "department", "association"}
+                      
+    # Check word immediately following
+    if ent.end < len(doc):
+        next_word = doc[ent.end].text.lower()
+        if next_word in org_indicators:
+            return True
+            
+    # Check word immediately preceding
+    if ent.start > 0:
+        prev_word = doc[ent.start - 1].text.lower()
+        if prev_word in {"ceo", "cto", "president", "director", "founder", "at", "by", "from"}:
+            return True
+            
+    return False
+
 def extract_entities(text: str) -> dict:
     """
     Extract named entities from article text with robust post-processing.
-    Returns a dict: { organizations, people, locations, dates }
+    Returns a dict: { organizations, people, locations, dates, technologies, products }
     """
     results = {
         "organizations": [],
         "people":        [],
         "locations":     [],
         "dates":         [],
+        "technologies":  [],
+        "products":      []
     }
 
     if not text or not isinstance(text, str):
@@ -166,6 +199,8 @@ def extract_entities(text: str) -> dict:
     people: set[str] = set()
     locs:   set[str] = set()
     dates:  set[str] = set()
+    techs:  set[str] = set()
+    prods:  set[str] = set()
 
     for ent in doc.ents:
         raw     = ent.text.strip()
@@ -178,8 +213,11 @@ def extract_entities(text: str) -> dict:
         # ── PERSON ────────────────────────────────────────────────────────
         if label == "PERSON":
             if cleaned in _AI_PRODUCTS_NOT_PERSON or cleaned in _TECH_ORGS:
-                # Reclassify known AI products or tech orgs as ORGs
-                orgs.add(cleaned)
+                # Reclassify known AI products or tech orgs
+                if cleaned in _TECH_ORGS:
+                    orgs.add(cleaned)
+                else:
+                    prods.add(cleaned)
                 continue
             if _looks_like_person(cleaned):
                 people.add(cleaned)
@@ -190,6 +228,21 @@ def extract_entities(text: str) -> dict:
             # Skip known medical abbreviations
             if cleaned.upper() in _MEDICAL_ABBR:
                 continue
+                
+            # Context-based filtering for tech terms
+            is_tech = False
+            for tech in _TECH_TERMS:
+                if cleaned.lower() == tech.lower():
+                    is_tech = True
+                    break
+                    
+            if is_tech:
+                if _is_org_in_context(ent, doc):
+                    orgs.add(cleaned)
+                else:
+                    techs.add(cleaned)
+                continue
+                
             # Skip all-caps ≤4-char acronyms (often noise)
             if cleaned.isupper() and len(cleaned) <= 4:
                 continue
@@ -241,15 +294,15 @@ def extract_entities(text: str) -> dict:
             if (has_digit or has_month) and len(cleaned) >= 4:
                 dates.add(cleaned)
 
-    # ── PRODUCT entities → add to orgs ────────────────────────────────────
-    for ent in doc.ents:
-        if ent.label_ == "PRODUCT":
-            cleaned = _strip_article(ent.text.strip())
+        # ── PRODUCT / TECH Catch-all ──────────────────────────────────────
+        elif label == "PRODUCT":
             if cleaned and len(cleaned) > 2 and cleaned not in _MEDICAL_ABBR:
-                orgs.add(cleaned)
+                prods.add(cleaned)
 
     results["organizations"] = sorted(orgs)
     results["people"]        = sorted(people)
     results["locations"]     = sorted(locs)
     results["dates"]         = sorted(dates)
+    results["technologies"]  = sorted(techs)
+    results["products"]      = sorted(prods)
     return results
